@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Wunderlist</string>
+    <string name="empty_field_error">Please Fill All Fields</string>
+    <string name="email_invalid_msg">Invalid Email</string>
+    <string name="password_invalid_msg">Invalid Password</string>
+    <string name="progress_message" />
+</resources>
