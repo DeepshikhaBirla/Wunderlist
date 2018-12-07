@@ -1,4 +1,4 @@
-package util;
+package com.intimetec.wunderlist.util;
 
 import android.content.Context;
 import android.net.ConnectivityManager;
