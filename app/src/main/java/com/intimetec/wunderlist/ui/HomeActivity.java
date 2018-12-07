@@ -1,9 +1,11 @@
-package com.intimetec.wunderlist;
+package com.intimetec.wunderlist.ui;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
-public class HomeActivity extends AppCompatActivity {
+import com.intimetec.wunderlist.R;
+
+public class HomeActivity extends BaseActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
