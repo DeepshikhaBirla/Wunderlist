@@ -6,7 +6,7 @@ import java.util.regex.Pattern;
 public class Util {
 
     public static boolean isPasswordValid(String email) {
-        return email.length() > 6;
+        return email.length() >= 6;
     }
 
     public static boolean isEmailValid(String email) {

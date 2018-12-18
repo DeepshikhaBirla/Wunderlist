@@ -1,35 +1,27 @@
 {
   "project_info": {
-    "project_number": "710625695543",
-    "firebase_url": "https://wunderlist-5cc2e.firebaseio.com",
-    "project_id": "wunderlist-5cc2e",
-    "storage_bucket": "wunderlist-5cc2e.appspot.com"
+    "project_number": "345510912529",
+    "firebase_url": "https://wunderlist-936d6.firebaseio.com",
+    "project_id": "wunderlist-936d6",
+    "storage_bucket": "wunderlist-936d6.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:710625695543:android:96aec6f56c25a100",
+        "mobilesdk_app_id": "1:345510912529:android:96aec6f56c25a100",
         "android_client_info": {
           "package_name": "com.intimetec.wunderlist"
         }
       },
       "oauth_client": [
         {
-          "client_id": "710625695543-o9l7vgu7vl972ik2f2hp8vvk7lfr7ib2.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.intimetec.wunderlist",
-            "certificate_hash": "903c59bd65dfcde3debc1582cb992acbf3a9cae7"
-          }
-        },
-        {
-          "client_id": "710625695543-lufkorsv2i3is57k9a4ovpajb8fr5sce.apps.googleusercontent.com",
+          "client_id": "345510912529-3u2sp1f2mm8p4psubvtopuof2p6noupu.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyAjv1MIeppzAN_aCc5uqGk2EZ8UZxCo82U"
+          "current_key": "AIzaSyAEnj-JVM3Dith20M5w959otuMGx7lMnGw"
         }
       ],
       "services": {
@@ -37,13 +29,8 @@
           "status": 1
         },
         "appinvite_service": {
-          "status": 2,
-          "other_platform_oauth_client": [
-            {
-              "client_id": "710625695543-lufkorsv2i3is57k9a4ovpajb8fr5sce.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
+          "status": 1,
+          "other_platform_oauth_client": []
         },
         "ads_service": {
           "status": 2

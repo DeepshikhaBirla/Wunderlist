@@ -68,7 +68,7 @@ public class RegisterActivity extends BaseActivity {
         } else if (TextUtils.isEmpty(password)) {
             registerPasswordEditTxt.setError(getString(R.string.empty_field_error));
         } else if (!Util.isPasswordValid(password)) {
-            registerEmailEditTxt.setError(getString(R.string.password_invalid_msg));
+            registerPasswordEditTxt.setError(getString(R.string.password_invalid_msg));
         } else {
             if (ConnectionUtil.isConnected(getApplicationContext())) {
                 hideSoftKeyboard(getCurrentFocus());

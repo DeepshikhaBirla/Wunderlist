@@ -6,6 +6,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
 import com.intimetec.wunderlist.R;
+import com.intimetec.wunderlist.util.PreferenceManager;
 
 public class SplashActivity extends AppCompatActivity {
 
@@ -17,11 +18,15 @@ public class SplashActivity extends AppCompatActivity {
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                startActivity(new Intent(SplashActivity.this, LoginActivity.class));
+                if (PreferenceManager.isUserLogin(SplashActivity.this)) {
+                    startActivity(new Intent(SplashActivity.this, HomeActivity.class));
+                } else {
+                    startActivity(new Intent(SplashActivity.this, LoginActivity.class));
+                }
                 finish();
             }
 
-        }, 3000);
+        }, 5000);
     }
 }
 

@@ -2,6 +2,20 @@
     <string name="app_name">Wunderlist</string>
     <string name="empty_field_error">Please Fill All Fields</string>
     <string name="email_invalid_msg">Invalid Email</string>
-    <string name="password_invalid_msg">Invalid Password</string>
-    <string name="progress_message" />
+    <string name="password_invalid_msg">Please fill minimum 6 characters</string>
+    <string name="progress_message">Loading ...</string>
+    <string name="title_activity_home">HomeActivity</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="nav_header_title">Android Studio</string>
+    <string name="nav_header_subtitle">android.studio@android.com</string>
+    <string name="nav_header_desc">Navigation header</string>
+    <string name="action_settings">Settings</string>
+    <string name="All_List">All List</string>
+    <string name="Default">Default</string>
+    <string name="Personal">Personal</string>
+    <string name="Shopping">Shopping</string>
+    <string name="Wishlist">Wishlist</string>
+    <string name="Work">Work</string>
+    <string name="SignOut">Sign Out</string>
 </resources>

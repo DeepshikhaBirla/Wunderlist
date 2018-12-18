@@ -1,6 +1,7 @@
 package com.intimetec.wunderlist.ui;
 
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -66,6 +67,8 @@ public class ForgotActivity extends BaseActivity {
                         hideProgressDialog();
                         if (task.isSuccessful()) {
                             Toast.makeText(getApplicationContext(), "Check email to reset your password!", Toast.LENGTH_SHORT).show();
+                            startActivity(new Intent(ForgotActivity.this, LoginActivity.class));
+                            finish();
                         } else {
                             Toast.makeText(getApplicationContext(), "Failed to send reset password email!", Toast.LENGTH_SHORT).show();
                         }

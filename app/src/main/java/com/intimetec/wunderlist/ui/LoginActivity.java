@@ -17,6 +17,7 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseUser;
 import com.intimetec.wunderlist.R;
 import com.intimetec.wunderlist.util.ConnectionUtil;
+import com.intimetec.wunderlist.util.PreferenceManager;
 import com.intimetec.wunderlist.util.Util;
 
 public class LoginActivity extends BaseActivity implements View.OnClickListener {
@@ -94,6 +95,7 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener 
                             FirebaseUser user = mFireBaseAuth.getCurrentUser();
 
                             if (user.isEmailVerified()) {
+                                PreferenceManager.setUserLogin(LoginActivity.this, true);
                                 startActivity(new Intent(LoginActivity.this, HomeActivity.class));
                             } else {
                                 Toast.makeText(getApplicationContext(), "Please verify your mail address", Toast.LENGTH_SHORT).show();
