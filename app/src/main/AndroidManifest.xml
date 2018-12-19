@@ -36,7 +36,7 @@
             android:name=".ui.HomeActivity"
             android:label="Wunderlist"
             android:theme="@style/AppTheme.NoActionBar" />
-        <activity android:name=".ui.ToDoList"></activity>
+        <activity android:name=".ui.ToDoListActivity"></activity>
     </application>
 
 </manifest>

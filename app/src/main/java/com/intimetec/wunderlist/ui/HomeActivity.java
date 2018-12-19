@@ -18,7 +18,6 @@ import com.intimetec.wunderlist.util.PreferenceManager;
 
 public class HomeActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
-    NavigationView signout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,7 +29,7 @@ public class HomeActivity extends AppCompatActivity
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startActivity(new Intent(HomeActivity.this,ToDoList.class));
+                startActivity(new Intent(HomeActivity.this,ToDoListActivity.class));
             }
         });
 
@@ -94,7 +93,7 @@ public class HomeActivity extends AppCompatActivity
 
         } else if (id == R.id.nav_work) {
 
-        }else if (id == R.id.nav_signout){
+        } else if (id == R.id.nav_signout){
             PreferenceManager.setUserLogin(HomeActivity.this, false);
             startActivity(new Intent(HomeActivity.this,LoginActivity.class));
         }

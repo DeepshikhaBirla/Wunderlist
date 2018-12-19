@@ -97,6 +97,7 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener 
                             if (user.isEmailVerified()) {
                                 PreferenceManager.setUserLogin(LoginActivity.this, true);
                                 startActivity(new Intent(LoginActivity.this, HomeActivity.class));
+                                finish();
                             } else {
                                 Toast.makeText(getApplicationContext(), "Please verify your mail address", Toast.LENGTH_SHORT).show();
                             }
