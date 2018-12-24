@@ -23,67 +23,69 @@ public class Task {
     private String category;
 
     @ColumnInfo(name = "user_id")
-    private int userId;
+    private String userId;
 
-    public int getTask_id() {
-        return task_id;
-    }
+    public Task() {}
 
-    public void setTask_id(int task_id) {
-        this.task_id = task_id;
-    }
+        public int getTask_id () {
+            return task_id;
+        }
 
-    public String getTaskName() {
-        return taskName;
-    }
+        public void setTask_id ( int task_id){
+            this.task_id = task_id;
+        }
 
-    public void setTaskName(String taskName) {
-        this.taskName = taskName;
-    }
+        public String getTaskName () {
+            return taskName;
+        }
 
-    public String getTaskDate() {
-        return taskDate;
-    }
+        public void setTaskName (String taskName){
+            this.taskName = taskName;
+        }
 
-    public void setTaskDate(String taskDate) {
-        this.taskDate = taskDate;
-    }
+        public String getTaskDate () {
+            return taskDate;
+        }
 
-    public String getTaskTime() {
-        return taskTime;
-    }
+        public void setTaskDate (String taskDate){
+            this.taskDate = taskDate;
+        }
 
-    public void setTaskTime(String taskTime) {
-        this.taskTime = taskTime;
-    }
+        public String getTaskTime () {
+            return taskTime;
+        }
 
-    public String getCategory() {
-        return category;
-    }
+        public void setTaskTime (String taskTime){
+            this.taskTime = taskTime;
+        }
 
-    public void setCategory(String category) {
-        this.category = category;
-    }
+        public String getCategory () {
+            return category;
+        }
 
-    public int getUserId() {
-        return userId;
-    }
+        public void setCategory (String category){
+            this.category = category;
+        }
 
-    public void setUserId(int userId) {
-        this.userId = userId;
-    }
+        public String getUserId () {
+            return userId;
+        }
 
-    @Override
-    public String toString() {
-        return "Task{" +
-                "task_id=" + task_id +
-                ", taskName='" + taskName + '\'' +
-                ", taskDate='" + taskDate + '\'' +
-                ", taskTime='" + taskTime + '\'' +
-                ", category='" + category + '\'' +
-                ", userId=" + userId +
-                '}';
+        public void setUserId (String userId){
+            this.userId = userId;
+        }
+
+        @Override
+        public String toString () {
+            return "Task{" +
+                    "task_id=" + task_id +
+                    ", taskName='" + taskName + '\'' +
+                    ", taskDate='" + taskDate + '\'' +
+                    ", taskTime='" + taskTime + '\'' +
+                    ", category='" + category + '\'' +
+                    ", userId=" + userId +
+                    '}';
+        }
     }
-}
 
 

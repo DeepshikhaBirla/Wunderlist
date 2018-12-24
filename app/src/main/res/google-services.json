@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "636938831741",
+    "firebase_url": "https://fir-project-908bb.firebaseio.com",
+    "project_id": "fir-project-908bb",
+    "storage_bucket": "fir-project-908bb.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:636938831741:android:d1c4493adceeb631",
+        "android_client_info": {
+          "package_name": "com.intimetec.Firebaseproject"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "636938831741-pdkqjamffht4rqo24067lf80p58lms2s.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.intimetec.Firebaseproject",
+            "certificate_hash": "998e3f283a020a439bf95013f405110292147e3e"
+          }
+        },
+        {
+          "client_id": "636938831741-v8e0hmptohf102ud5fme6rlncirn5035.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyArzcSuTpWGzjkf5rzRqMLlHpqtgWV3bHw"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "636938831741-v8e0hmptohf102ud5fme6rlncirn5035.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
