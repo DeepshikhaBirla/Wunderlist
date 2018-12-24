@@ -14,7 +14,6 @@ public abstract class TaskDatabase extends RoomDatabase {
 
     private static TaskDatabase sTaskDatabaseInstance = null;
 
-
     public static TaskDatabase getInstance(Context context) {
         if (sTaskDatabaseInstance == null) {
             sTaskDatabaseInstance = buildDatabase(context);
