@@ -2,6 +2,8 @@ package com.intimetec.wunderlist.ui;
 
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
+import android.content.Intent;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -16,14 +18,26 @@ import android.widget.Spinner;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FieldValue;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreSettings;
+import com.google.firebase.firestore.SetOptions;
 import com.intimetec.wunderlist.R;
-import com.intimetec.wunderlist.data.Task;
-import com.intimetec.wunderlist.data.TaskCategory;
-import com.intimetec.wunderlist.data.TaskRepository;
+import com.intimetec.wunderlist.data.task.Task;
+import com.intimetec.wunderlist.data.task.TaskCategory;
+import com.intimetec.wunderlist.data.task.TaskRepository;
+import com.intimetec.wunderlist.data.user.User;
+import com.intimetec.wunderlist.data.user.UserRepository;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ToDoListActivity extends AppCompatActivity implements View.OnClickListener {
     ImageButton btnDatePicker, btnTimePicker;
@@ -31,15 +45,24 @@ public class ToDoListActivity extends AppCompatActivity implements View.OnClickL
     private int mYear, mMonth, mDay, mHour, mMinute;
     private Spinner categorySpinner;
     private Button saveBtn;
+    private FirebaseFirestore db;
     ArrayAdapter<String> categoryAdapter;
     List<String> list;
 
     private TaskRepository mTaskRepository;
+    private UserRepository mUserRepository;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_to_do_list);
+
+        db = FirebaseFirestore.getInstance();
+        FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
+                .setTimestampsInSnapshotsEnabled(true)
+                .build();
+        db.setFirestoreSettings(settings);
+
         btnDatePicker = findViewById(R.id.calender_img_btn);
         btnTimePicker = findViewById(R.id.time_img_btn);
 
@@ -49,6 +72,7 @@ public class ToDoListActivity extends AppCompatActivity implements View.OnClickL
         saveBtn = findViewById(R.id.task_save_btn);
 
         mTaskRepository = new TaskRepository(getApplication());
+        mUserRepository = new UserRepository(getApplication());
 
         txtDate.setOnClickListener(this);
         btnDatePicker.setOnClickListener(this);
@@ -96,8 +120,10 @@ public class ToDoListActivity extends AppCompatActivity implements View.OnClickL
 
                             txtDate.setText(dayOfMonth + "-" + (monthOfYear + 1) + "-" + year);
 
+
                         }
                     }, mYear, mMonth, mDay);
+            datePickerDialog.getDatePicker().setMinDate(System.currentTimeMillis() - 1000);
             datePickerDialog.show();
         } else if (view == btnTimePicker || view == txtTime) {
 
@@ -132,6 +158,7 @@ public class ToDoListActivity extends AppCompatActivity implements View.OnClickL
         txtDate.setError(null);
         txtTime.setError(null);
 
+
         if (TextUtils.isEmpty(taskName)) {
             txtName.setError(getString(R.string.empty_field_error));
         } else if (TextUtils.isEmpty(taskDate)) {
@@ -139,20 +166,51 @@ public class ToDoListActivity extends AppCompatActivity implements View.OnClickL
         } else if (TextUtils.isEmpty(taskTime)) {
             txtTime.setError(getString(R.string.empty_field_error));
         } else {
+
+            User user = mUserRepository.fetchUser();
+
             Task task = new Task();
             task.setTaskName(taskName);
             task.setTaskDate(taskDate);
             task.setTaskTime(taskTime);
+            task.setUserId(user.getUserId());
             task.setCategory(categorySpinner.getSelectedItem().toString());
-
             mTaskRepository.add(task);
-            Toast.makeText(getApplicationContext(), "Successfully Task Saved", Toast.LENGTH_LONG).show();
 
-            finish();
+            task = mTaskRepository.fetchTaskByName(taskName);
 
+            Map<String, Object> taskMap = new HashMap<>();
+            taskMap.put("taskName", taskName);
+            taskMap.put("taskId", task.getTaskId());
+            taskMap.put("taskDate", taskDate);
+            taskMap.put("taskTime", taskTime);
+            taskMap.put("taskCategory", task.getCategory());
+
+
+            db.collection("users")
+                    .document(user.getUserEmail())
+                    .update("tasks", FieldValue.arrayUnion(taskMap))
+                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+                            Log.i(ToDoListActivity.class.getCanonicalName(), "success");
+
+                            finish();
+                        }
+                    }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    Log.i(ToDoListActivity.class.getCanonicalName(), "Failed");
+                    finish();
+                }
+            });
+
+            Toast.makeText(this, "Task Saved Successfully", Toast.LENGTH_LONG).show();
         }
-    }
 
+    }
 }
+
+
 
 

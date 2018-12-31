@@ -1,4 +1,4 @@
-package com.intimetec.wunderlist.data;
+package com.intimetec.wunderlist.data.task;
 
 
 public enum TaskCategory {

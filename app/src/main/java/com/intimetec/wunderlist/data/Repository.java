@@ -10,4 +10,6 @@ public interface Repository<T> {
     void delete(T item);
 
     List<T> fetchAll();
+
+
 }

@@ -1,4 +1,4 @@
-package com.intimetec.wunderlist.data;
+package com.intimetec.wunderlist.data.task;
 
 import android.arch.persistence.room.ColumnInfo;
 import android.arch.persistence.room.Entity;
@@ -7,7 +7,7 @@ import android.arch.persistence.room.PrimaryKey;
 @Entity(tableName = "Task")
 public class Task {
     @PrimaryKey(autoGenerate = true)
-    private int task_id;
+    private int taskId;
 
     @ColumnInfo(name = "task_name")
     private String taskName;
@@ -23,14 +23,17 @@ public class Task {
     private String category;
 
     @ColumnInfo(name = "user_id")
-    private int userId;
+    private String userId;
 
-    public int getTask_id() {
-        return task_id;
+    public Task() {
     }
 
-    public void setTask_id(int task_id) {
-        this.task_id = task_id;
+    public int getTaskId() {
+        return taskId;
+    }
+
+    public void setTaskId(int taskId) {
+        this.taskId = taskId;
     }
 
     public String getTaskName() {
@@ -65,18 +68,18 @@ public class Task {
         this.category = category;
     }
 
-    public int getUserId() {
+    public String getUserId() {
         return userId;
     }
 
-    public void setUserId(int userId) {
+    public void setUserId(String userId) {
         this.userId = userId;
     }
 
     @Override
     public String toString() {
         return "Task{" +
-                "task_id=" + task_id +
+                "taskId=" + taskId +
                 ", taskName='" + taskName + '\'' +
                 ", taskDate='" + taskDate + '\'' +
                 ", taskTime='" + taskTime + '\'' +

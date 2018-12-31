@@ -16,6 +16,8 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseUser;
 import com.intimetec.wunderlist.R;
+import com.intimetec.wunderlist.data.user.User;
+import com.intimetec.wunderlist.data.user.UserRepository;
 import com.intimetec.wunderlist.util.ConnectionUtil;
 import com.intimetec.wunderlist.util.PreferenceManager;
 import com.intimetec.wunderlist.util.Util;
@@ -96,6 +98,15 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener 
 
                             if (user.isEmailVerified()) {
                                 PreferenceManager.setUserLogin(LoginActivity.this, true);
+                                UserRepository userRepository = new UserRepository(getApplication());
+
+                                User loginUser = new User();
+                                loginUser.setUserEmail(user.getEmail());
+                                loginUser.setUserId(user.getUid());
+                                loginUser.setUserName(user.getDisplayName());
+
+                                userRepository.add(loginUser);
+
                                 startActivity(new Intent(LoginActivity.this, HomeActivity.class));
                                 finish();
                             } else {

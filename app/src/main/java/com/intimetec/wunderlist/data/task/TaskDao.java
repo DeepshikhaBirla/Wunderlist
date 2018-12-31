@@ -1,4 +1,4 @@
-package com.intimetec.wunderlist.data;
+package com.intimetec.wunderlist.data.task;
 
 import android.arch.persistence.room.Dao;
 import android.arch.persistence.room.Delete;
@@ -26,15 +26,19 @@ public interface TaskDao {
     @Query("SELECT * FROM task WHERE category = :category")
     public List<Task> fetchTodoListByCategory(String category);
 
-    @Query("SELECT * FROM task WHERE task_id = :toDoId")
+    @Query("SELECT * FROM task WHERE taskId = :toDoId")
     public Task fetchTodoById(int toDoId);
 
     @Query("SELECT * FROM task WHERE task_name = :taskName")
     public Task fetchTodoByName(String taskName);
 
+
+
     @Query("SELECT * FROM task WHERE category LIKE :search " +
-            "OR task_id LIKE :search")
+            "OR taskId LIKE :search")
     public List<Task> findCategoryWithTaskName(String search);
 
+    @Query("DELETE FROM task")
+    void deleteAll();
 }
 

@@ -15,7 +15,6 @@
 
     tools:context=".ui.ToDoListActivity">
 
-
     <TextView
 
         android:id="@+id/task_name_txt"
@@ -123,7 +122,6 @@
         android:layout_width="match_parent"
 
         android:layout_height="wrap_content"
-
         android:layout_below="@+id/due_date_txt"
 
         android:layout_alignParentStart="true"
@@ -168,7 +166,6 @@
 
 
     <TextView
-
         android:id="@+id/addlist_txt_view"
 
         android:layout_width="match_parent"

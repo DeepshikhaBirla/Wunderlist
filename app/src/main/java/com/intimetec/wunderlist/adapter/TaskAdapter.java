@@ -8,7 +8,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.intimetec.wunderlist.R;
-import com.intimetec.wunderlist.data.Task;
+import com.intimetec.wunderlist.data.task.Task;
 
 import java.util.List;
 
@@ -37,9 +37,18 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
 
     }
 
+
+    public Task getItem(int position) {
+        return allTasks.get(position);
+    }
+
     @Override
     public int getItemCount() {
         return allTasks.size();
+    }
+
+    public void removeItem(int position) {
+        allTasks.remove(position);
     }
 
 

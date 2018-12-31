@@ -11,17 +11,28 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreSettings;
+import com.google.firebase.firestore.SetOptions;
 import com.intimetec.wunderlist.R;
+import com.intimetec.wunderlist.data.user.User;
 import com.intimetec.wunderlist.util.ConnectionUtil;
 import com.intimetec.wunderlist.util.Util;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class RegisterActivity extends BaseActivity {
     private static final String TAG = RegisterActivity.class.getCanonicalName();
     private EditText registerEmailEditTxt, registerPasswordEditTxt, userNameEditTxt;
     private Button loginButton, registerButton;
+
+    private FirebaseFirestore db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,6 +44,12 @@ public class RegisterActivity extends BaseActivity {
         userNameEditTxt = findViewById(R.id.name_edit_text);
         loginButton = findViewById(R.id.register_btn);
         registerButton = findViewById(R.id.signup_btn);
+
+        db = FirebaseFirestore.getInstance();
+        FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
+                .setTimestampsInSnapshotsEnabled(true)
+                .build();
+        db.setFirestoreSettings(settings);
 
         registerButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -54,6 +71,7 @@ public class RegisterActivity extends BaseActivity {
         String name = userNameEditTxt.getText().toString().trim();
         String email = registerEmailEditTxt.getText().toString().trim();
         String password = registerPasswordEditTxt.getText().toString().trim();
+
 
         userNameEditTxt.setError(null);
         registerEmailEditTxt.setError(null);
@@ -78,10 +96,11 @@ public class RegisterActivity extends BaseActivity {
             } else {
                 Toast.makeText(getApplicationContext(), "Please check your internet connection!", Toast.LENGTH_SHORT).show();
             }
+            Toast.makeText(this, "Saved Data", Toast.LENGTH_LONG).show();
         }
     }
 
-    private void createUser(String email, String password) {
+    private void createUser(final String email, String password) {
         mFireBaseAuth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
@@ -96,6 +115,28 @@ public class RegisterActivity extends BaseActivity {
                             Toast.makeText(getApplicationContext(), "Email verification link is sent. " +
                                     "please verify your mail address", Toast.LENGTH_LONG).show();
 
+                            User loginUser = new User();
+                            loginUser.setUserName(userNameEditTxt.getText().toString());
+                            loginUser.setUserEmail(user.getEmail());
+                            loginUser.setUserId(user.getUid());
+
+                            Map<String, User> userMap = new HashMap<>();
+                            userMap.put("user", loginUser);
+
+                            db.collection("users").document(email).set(userMap, SetOptions.merge())
+                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                        @Override
+                                        public void onSuccess(Void aVoid) {
+                                            Log.w("RegisterActivity", "DocumentSnapshot Successfully written");
+                                        }
+                                    })
+                                    .addOnFailureListener(new OnFailureListener() {
+                                        @Override
+                                        public void onFailure(@NonNull Exception e) {
+                                            Log.w("RegisterActivity", "Error writing document", e);
+                                        }
+                                    });
+
                             startActivity(new Intent(RegisterActivity.this, LoginActivity.class));
                             finish();
                         } else {
@@ -109,4 +150,3 @@ public class RegisterActivity extends BaseActivity {
                 });
     }
 }
-
