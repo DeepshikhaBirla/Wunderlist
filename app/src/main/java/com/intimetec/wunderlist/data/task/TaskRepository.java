@@ -8,7 +8,7 @@ import com.intimetec.wunderlist.data.WunderListDatabase;
 
 import java.util.List;
 
-public class TaskRepository implements Repository<Task>{
+public class TaskRepository implements Repository<Task> {
 
     private TaskDao mTaskDao = null;
     private List<Task> allTasks = null;
@@ -19,8 +19,6 @@ public class TaskRepository implements Repository<Task>{
         WunderListDatabase database = WunderListDatabase.getInstance(application);
         mTaskDao = database.taskDao();
         allTasks = mTaskDao.fetchAllToDos();
-
-
     }
 
     @Override
@@ -50,7 +48,30 @@ public class TaskRepository implements Repository<Task>{
     public List<Task> fetchAll() {
         return mTaskDao.fetchAllToDos();
     }
+
+
+    public List<Task> fetchAllFinishedTasks() {
+        return mTaskDao.fetchAllFinishedToDos();
     }
+
+    public List<Task> fetchTodoListByCategory(String categoryName) {
+        return mTaskDao.fetchTodoListByCategory(categoryName);
+    }
+
+    public List<Task> fetchAllToDos() {
+        return mTaskDao.fetchAllToDos();
+    }
+
+
+
+    public List<Task> fetchUserOrderByDateInDesc() {
+        return  mTaskDao.fetchUserOrderByDateInDesc();
+    }
+
+    public List<Task> fetchUserOrderByDateInAsc() {
+        return mTaskDao.fetchUserOrderByDateInAsc();
+    }
+}
 
 
 

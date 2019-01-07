@@ -30,6 +30,13 @@
             android:id="@+id/nav_work"
             android:icon="@drawable/work"
             android:title="@string/Work" />
+
+        <item
+            android:id="@+id/nav_finished"
+            android:icon="@drawable/work"
+            android:title="@string/Finished" />
+
+
         <item
             android:id="@+id/nav_signout"
             android:icon="@drawable/signout"

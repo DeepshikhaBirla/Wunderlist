@@ -3,6 +3,7 @@ package com.intimetec.wunderlist.data;
 import android.arch.persistence.room.Database;
 import android.arch.persistence.room.Room;
 import android.arch.persistence.room.RoomDatabase;
+import android.arch.persistence.room.TypeConverters;
 import android.content.Context;
 
 import com.intimetec.wunderlist.data.task.Task;
@@ -11,6 +12,7 @@ import com.intimetec.wunderlist.data.user.User;
 import com.intimetec.wunderlist.data.user.UserDao;
 
 @Database(entities = {Task.class, User.class}, version = 1, exportSchema = false)
+@TypeConverters({TimestampConverter.class})
 public abstract class WunderListDatabase extends RoomDatabase {
 
     public abstract TaskDao taskDao();

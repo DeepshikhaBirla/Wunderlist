@@ -7,20 +7,33 @@
     android:orientation="horizontal"
     android:paddingLeft="30dp"
     android:paddingRight="30dp">
-
-    <TextView
-        android:id="@+id/view_txt_name"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:text="Task Name"
-        android:textSize="20sp" />
+        android:id="@+id/task_linear_layout">
+        <CheckBox
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+
+            android:id="@+id/checkbox"/>
+        <TextView
+            android:id="@+id/view_txt_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginLeft="20dp"
+            android:text="Task Name"
+            android:textSize="20sp" />
+    </LinearLayout>
+
+
 
     <LinearLayout
         android:id="@+id/view_layout"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/view_txt_name"
+        android:layout_marginLeft="51dp"
+        android:layout_below="@+id/task_linear_layout"
         android:layout_marginTop="5dp">
 
         <TextView
@@ -41,11 +54,12 @@
 
     <TextView
         android:id="@+id/view_txt_category"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/view_layout"
         android:layout_marginTop="5dp"
         android:layout_marginBottom="10dp"
+        android:layout_marginLeft="51dp"
         android:text="Task Category" />
 
 </RelativeLayout>

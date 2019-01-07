@@ -17,5 +17,6 @@
     <string name="Shopping">Shopping</string>
     <string name="Wishlist">Wishlist</string>
     <string name="Work">Work</string>
+    <string name="Finished">Finished</string>
     <string name="SignOut">Sign Out</string>
 </resources>

@@ -2,6 +2,7 @@ package com.intimetec.wunderlist.ui;
 
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
+import android.arch.persistence.room.TypeConverter;
 import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -33,16 +34,20 @@ import com.intimetec.wunderlist.data.task.TaskRepository;
 import com.intimetec.wunderlist.data.user.User;
 import com.intimetec.wunderlist.data.user.UserRepository;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ToDoListActivity extends AppCompatActivity implements View.OnClickListener {
+public class ToDoListActivity extends BaseActivity implements View.OnClickListener {
     ImageButton btnDatePicker, btnTimePicker;
     EditText txtName, txtDate, txtTime;
-    private int mYear, mMonth, mDay, mHour, mMinute;
+    private int mYear, mMonth, mDay, mHour, mMinute, mSecond;
     private Spinner categorySpinner;
     private Button saveBtn;
     private FirebaseFirestore db;
@@ -88,7 +93,25 @@ public class ToDoListActivity extends AppCompatActivity implements View.OnClickL
         categorySpinner.setAdapter(categoryAdapter);
 
         saveBtn.setOnClickListener(this);
+
+
+        Bundle data = getIntent().getExtras();
+        if (data != null) {
+            Task task = (Task) data.getParcelable("task");
+            if (task != null) {
+                txtName.setText(task.getTaskName());
+
+
+                txtDate.setText(task.getDateTime().toString());
+                TaskCategory taskCategory = TaskCategory.valueOf(task.getCategory());
+                categorySpinner.setSelection(taskCategory.getPosition());
+
+                saveBtn.setText("Update");
+            }
+
+        }
     }
+
 
     private List<String> getTaskCategories() {
         List<String> categories = new ArrayList<>();
@@ -105,10 +128,19 @@ public class ToDoListActivity extends AppCompatActivity implements View.OnClickL
         if (view == btnDatePicker || view == txtDate) {
 
             // Get Current Date
-            final Calendar c = Calendar.getInstance();
+
+
+            Calendar c = Calendar.getInstance();
             mYear = c.get(Calendar.YEAR);
             mMonth = c.get(Calendar.MONTH);
             mDay = c.get(Calendar.DAY_OF_MONTH);
+            mHour = c.get(Calendar.HOUR_OF_DAY);
+            mMinute = c.get(Calendar.MINUTE);
+            mSecond = c.get(Calendar.SECOND);
+            Date date = new Date();
+
+            DateFormat dateFormat = new SimpleDateFormat("dd-mm-yyyy hh:mm:ss");
+            String strdate = dateFormat.format(date);
 
 
             DatePickerDialog datePickerDialog = new DatePickerDialog(this,
@@ -118,9 +150,8 @@ public class ToDoListActivity extends AppCompatActivity implements View.OnClickL
                         public void onDateSet(DatePicker view, int year,
                                               int monthOfYear, int dayOfMonth) {
 
-                            txtDate.setText(dayOfMonth + "-" + (monthOfYear + 1) + "-" + year);
 
-
+                            txtDate.setText(dayOfMonth + "-" + (monthOfYear + 1) + "-" + year );
                         }
                     }, mYear, mMonth, mDay);
             datePickerDialog.getDatePicker().setMinDate(System.currentTimeMillis() - 1000);
@@ -128,9 +159,6 @@ public class ToDoListActivity extends AppCompatActivity implements View.OnClickL
         } else if (view == btnTimePicker || view == txtTime) {
 
             // Get Current Time
-            final Calendar c = Calendar.getInstance();
-            mHour = c.get(Calendar.HOUR_OF_DAY);
-            mMinute = c.get(Calendar.MINUTE);
 
             // Launch Time Picker Dialog
             TimePickerDialog timePickerDialog = new TimePickerDialog(this,
@@ -145,36 +173,53 @@ public class ToDoListActivity extends AppCompatActivity implements View.OnClickL
                     }, mHour, mMinute, false);
             timePickerDialog.show();
         } else if (view == saveBtn) {
-            attemptSave();
+            Bundle data = getIntent().getExtras();
+            if (data != null) {
+                Task task = (Task) data.getParcelable("task");
+                if (task != null) {
+                    attemptUpdate(task);
+                }
+
+            } else if (view == saveBtn) {
+                attemptSave();
+            }
         }
     }
 
     private void attemptSave() {
         String taskName = txtName.getText().toString().trim();
-        String taskDate = txtDate.getText().toString().trim();
-        String taskTime = txtTime.getText().toString().trim();
+        String dateTime = txtDate.getText().toString().trim()+" "+txtTime.getText().toString()+":00";
 
         txtName.setError(null);
         txtDate.setError(null);
         txtTime.setError(null);
 
-
+        DateFormat df = new SimpleDateFormat("dd-MM-yyyy hh:mm:ss");
+        Date date = null;
+        try {
+            date = df.parse(dateTime);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
         if (TextUtils.isEmpty(taskName)) {
             txtName.setError(getString(R.string.empty_field_error));
-        } else if (TextUtils.isEmpty(taskDate)) {
+        } else if (TextUtils.isEmpty(dateTime)) {
             txtDate.setError(getString(R.string.empty_field_error));
-        } else if (TextUtils.isEmpty(taskTime)) {
+        } else if (TextUtils.isEmpty(dateTime)) {
             txtTime.setError(getString(R.string.empty_field_error));
         } else {
+
+            showProgressDialog();
 
             User user = mUserRepository.fetchUser();
 
             Task task = new Task();
             task.setTaskName(taskName);
-            task.setTaskDate(taskDate);
-            task.setTaskTime(taskTime);
+            task.setDateTime(date);
+
             task.setUserId(user.getUserId());
             task.setCategory(categorySpinner.getSelectedItem().toString());
+            task.setIsFinished(0);
             mTaskRepository.add(task);
 
             task = mTaskRepository.fetchTaskByName(taskName);
@@ -182,9 +227,10 @@ public class ToDoListActivity extends AppCompatActivity implements View.OnClickL
             Map<String, Object> taskMap = new HashMap<>();
             taskMap.put("taskName", taskName);
             taskMap.put("taskId", task.getTaskId());
-            taskMap.put("taskDate", taskDate);
-            taskMap.put("taskTime", taskTime);
+            taskMap.put("dateTime", dateTime);
+
             taskMap.put("taskCategory", task.getCategory());
+            taskMap.put("isFinished", task.getIsFinished());
 
 
             db.collection("users")
@@ -194,19 +240,84 @@ public class ToDoListActivity extends AppCompatActivity implements View.OnClickL
                         @Override
                         public void onSuccess(Void aVoid) {
                             Log.i(ToDoListActivity.class.getCanonicalName(), "success");
-
+                            hideProgressDialog();
                             finish();
                         }
                     }).addOnFailureListener(new OnFailureListener() {
                 @Override
                 public void onFailure(@NonNull Exception e) {
                     Log.i(ToDoListActivity.class.getCanonicalName(), "Failed");
+                    hideProgressDialog();
                     finish();
                 }
             });
 
+
             Toast.makeText(this, "Task Saved Successfully", Toast.LENGTH_LONG).show();
         }
+
+
+    }
+
+
+    private void attemptUpdate(Task task) {
+        String taskName = txtName.getText().toString().trim();
+        String dateTime = txtDate.getText().toString().trim().concat(txtTime.getText().toString());
+
+
+        Date date = new Date();
+
+        txtName.setError(null);
+        txtDate.setError(null);
+        txtTime.setError(null);
+
+
+        if (TextUtils.isEmpty(taskName)) {
+            txtName.setError(getString(R.string.empty_field_error));
+        } else if (TextUtils.isEmpty(dateTime)) {
+            txtDate.setError(getString(R.string.empty_field_error));
+        } else if (TextUtils.isEmpty(dateTime)) {
+            txtTime.setError(getString(R.string.empty_field_error));
+        } else {
+
+            showProgressDialog();
+
+            User user = mUserRepository.fetchUser();
+
+            task.setTaskName(taskName);
+            task.setDateTime(date);
+
+            task.setCategory(categorySpinner.getSelectedItem().toString());
+            mTaskRepository.update(task);
+
+            Map<String, Object> taskMap = new HashMap<>();
+            taskMap.put("taskName", taskName);
+            taskMap.put("taskId", task.getTaskId());
+            taskMap.put("datetime", dateTime);
+            taskMap.put("taskCategory", task.getCategory());
+
+            db.collection("users")
+                    .document(user.getUserEmail())
+                    .update("tasks", FieldValue.arrayUnion(taskMap))
+                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+                            Log.i(ToDoListActivity.class.getCanonicalName(), "success");
+                            hideProgressDialog();
+                            finish();
+                        }
+                    }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    Log.i(ToDoListActivity.class.getCanonicalName(), "Failed");
+                    hideProgressDialog();
+                    finish();
+                }
+            });
+
+            Toast.makeText(this, "Task Updated Successfully", Toast.LENGTH_LONG).show();
+        }
+
 
     }
 }

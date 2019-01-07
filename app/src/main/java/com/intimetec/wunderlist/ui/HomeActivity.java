@@ -1,9 +1,13 @@
 package com.intimetec.wunderlist.ui;
 
+import android.app.Application;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
@@ -20,7 +24,11 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Adapter;
+import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.SearchView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -35,33 +43,38 @@ import com.intimetec.wunderlist.R;
 import com.intimetec.wunderlist.adapter.TaskAdapter;
 import com.intimetec.wunderlist.data.Repository;
 import com.intimetec.wunderlist.data.task.Task;
+import com.intimetec.wunderlist.data.task.TaskCategory;
 import com.intimetec.wunderlist.data.task.TaskDao;
 import com.intimetec.wunderlist.data.task.TaskRepository;
 import com.intimetec.wunderlist.data.user.User;
 import com.intimetec.wunderlist.util.PreferenceManager;
+
+import org.w3c.dom.Text;
 
 import java.util.List;
 
 import static android.support.v7.widget.helper.ItemTouchHelper.*;
 
 public class HomeActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+        implements NavigationView.OnNavigationItemSelectedListener, SearchView.OnQueryTextListener {
 
     private RecyclerView mTaskRecyclerView;
     private DeleteAsyncTask mDeleteAsyncTask;
     private LoadTasksAsyncTask mLoadAsyncTask;
-
+    private TaskRepository mTaskRepository;
     private FirebaseFirestore db;
+    private SearchView searchView;
     private TaskAdapter mTaskAdapter;
+    private MenuItem ascendingMenuItem, descendingMenuItem;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         ImageButton fab = findViewById(R.id.fab);
-
 
         db = FirebaseFirestore.getInstance();
         FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
@@ -72,6 +85,8 @@ public class HomeActivity extends AppCompatActivity
             @Override
             public void onClick(View view) {
                 startActivity(new Intent(HomeActivity.this, ToDoListActivity.class));
+
+
             }
         });
 
@@ -86,36 +101,75 @@ public class HomeActivity extends AppCompatActivity
 
         mTaskRecyclerView = findViewById(R.id.recycle_list);
 
-
-
         new ItemTouchHelper(new SimpleCallback(ItemTouchHelper.UP | ItemTouchHelper.DOWN,
                 ItemTouchHelper.LEFT) {
-            public  boolean onMove(RecyclerView recyclerView,
-                                   RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+
+            @Override
+            public void onMoved(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, int fromPos, RecyclerView.ViewHolder target, int toPos, int x, int y) {
+                super.onMoved(recyclerView, viewHolder, fromPos, target, toPos, x, y);
+                Toast.makeText(getApplicationContext(), " On Move pos : "+fromPos, Toast.LENGTH_SHORT).show();
+            }
+
+            public boolean onMove(RecyclerView recyclerView,
+                                  RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
                 final int fromPos = viewHolder.getAdapterPosition();
                 final int toPos = target.getAdapterPosition();
 
                 return true;
             }
+            //task is not visible according to their category
 
-            public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
+            public void onSwiped(final RecyclerView.ViewHolder viewHolder, int direction) {
 
-                Task task = mTaskAdapter.getItem(viewHolder.getAdapterPosition());
-                mTaskAdapter.removeItem(viewHolder.getAdapterPosition());
+                AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(HomeActivity.this);
+                alertDialogBuilder.setMessage("Are you sure, You wanted to Delete Task");
+                alertDialogBuilder.setPositiveButton("yes",
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface arg0, int arg1) {
+                                Task task = mTaskAdapter.getItem(viewHolder.getAdapterPosition());
+                                mDeleteAsyncTask = new DeleteAsyncTask(task);
+                                Toast.makeText(HomeActivity.this, "Task Deleted : " + task.getTaskName(), Toast.LENGTH_SHORT).show();
+                                mTaskAdapter.removeItem(viewHolder.getAdapterPosition());
+                                mDeleteAsyncTask.execute();
+                            }
+                        });
 
-                Toast.makeText(HomeActivity.this, "Task Deleted : "+task.getTaskName(), Toast.LENGTH_SHORT).show();
+                alertDialogBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        mTaskAdapter.notifyDataSetChanged();
+                    }
+                });
 
-                mDeleteAsyncTask = new DeleteAsyncTask(task);
-                mDeleteAsyncTask.execute();
+                AlertDialog alertDialog = alertDialogBuilder.create();
+                alertDialog.show();
             }
 
-        }).attachToRecyclerView(mTaskRecyclerView);
 
+        }).attachToRecyclerView(mTaskRecyclerView);
+        searchView = findViewById(R.id.action_search);
+
+        searchView.setOnQueryTextListener(this);
     }
+
+    @Override
+    public boolean onQueryTextSubmit(String newText) {
+
+        return false;
+    }
+
+    @Override
+    public boolean onQueryTextChange(String newText) {
+        mTaskAdapter.filter(newText);
+        return false;
+    }
+
 
     private class DeleteAsyncTask extends AsyncTask<Void, Void, Void> {
         private TaskRepository taskRepository;
         private Task task;
+
 
         DeleteAsyncTask(Task task) {
             this.task = task;
@@ -174,7 +228,7 @@ public class HomeActivity extends AppCompatActivity
             super.onPostExecute(allTask);
 
             mTaskRecyclerView.setLayoutManager(new LinearLayoutManager(HomeActivity.this));
-            mTaskAdapter = new TaskAdapter(allTask);
+            mTaskAdapter = new TaskAdapter(allTask, getApplication(), getApplicationContext());
             mTaskRecyclerView.setAdapter(mTaskAdapter);
         }
     }
@@ -191,11 +245,13 @@ public class HomeActivity extends AppCompatActivity
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.home, menu);
 
+        getMenuInflater().inflate(R.menu.home, menu);
+        ascendingMenuItem = menu.findItem(R.id.ascending_list_menu);
+        descendingMenuItem = menu.findItem(R.id.descending_list_menu);
         return true;
-    }
+
+}
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -203,10 +259,24 @@ public class HomeActivity extends AppCompatActivity
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-
+        mTaskRepository = new TaskRepository(getApplication());
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+        if (id == R.id.ascending_list_menu) {
+            descendingMenuItem.setChecked(true);
+            ascendingMenuItem.setChecked(false);
+            List<Task> allTasks = mTaskRepository.fetchUserOrderByDateInAsc();
+            mTaskAdapter = new TaskAdapter(allTasks, getApplication(), getApplicationContext());
+            mTaskRecyclerView.setAdapter(mTaskAdapter);
+
+        } else if (id == R.id.descending_list_menu) {
+            ascendingMenuItem.setChecked(true);
+            descendingMenuItem.setChecked(false);
+            List<Task> allTasks = mTaskRepository.fetchUserOrderByDateInDesc();
+            mTaskAdapter = new TaskAdapter(allTasks, getApplication(), getApplicationContext());
+            mTaskRecyclerView.setAdapter(mTaskAdapter);
+
+
+
         }
 
         return super.onOptionsItemSelected(item);
@@ -218,17 +288,42 @@ public class HomeActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
+        mTaskRepository = new TaskRepository(getApplication());
+
         if (id == R.id.all_list) {
+            List<Task> allTasks = mTaskRepository.fetchAllToDos();
+            mTaskAdapter = new TaskAdapter(allTasks, getApplication(), getApplicationContext());
+            mTaskRecyclerView.setAdapter(mTaskAdapter);
+
             // Handle the camera action
         } else if (id == R.id.nav_default) {
-
+            List<Task> allTasks = mTaskRepository.fetchTodoListByCategory(TaskCategory.Default.toString());
+            mTaskAdapter = new TaskAdapter(allTasks, getApplication(), getApplicationContext());
+            mTaskRecyclerView.setAdapter(mTaskAdapter);
         } else if (id == R.id.nav_personal) {
+            List<Task> allTasks = mTaskRepository.fetchTodoListByCategory(TaskCategory.Personal.toString());
+            mTaskAdapter = new TaskAdapter(allTasks, getApplication(), getApplicationContext());
+            mTaskRecyclerView.setAdapter(mTaskAdapter);
 
         } else if (id == R.id.nav_shopping) {
+            List<Task> allTasks = mTaskRepository.fetchTodoListByCategory(TaskCategory.Shopping.toString());
+            mTaskAdapter = new TaskAdapter(allTasks, getApplication(), getApplicationContext());
+            mTaskRecyclerView.setAdapter(mTaskAdapter);
 
         } else if (id == R.id.nav_wishlist) {
+            List<Task> allTasks = mTaskRepository.fetchTodoListByCategory(TaskCategory.WishList.toString());
+            mTaskAdapter = new TaskAdapter(allTasks, getApplication(), getApplicationContext());
+            mTaskRecyclerView.setAdapter(mTaskAdapter);
 
         } else if (id == R.id.nav_work) {
+            List<Task> allTasks = mTaskRepository.fetchTodoListByCategory(TaskCategory.Work.toString());
+            mTaskAdapter = new TaskAdapter(allTasks, getApplication(), getApplicationContext());
+            mTaskRecyclerView.setAdapter(mTaskAdapter);
+
+        }else if(id == R.id.nav_finished){
+            List<Task> allTasks = mTaskRepository.fetchAllFinishedTasks();
+            mTaskAdapter = new TaskAdapter(allTasks, getApplication(), getApplicationContext());
+            mTaskRecyclerView.setAdapter(mTaskAdapter);
 
         } else if (id == R.id.nav_signout) {
             PreferenceManager.setUserLogin(HomeActivity.this, false);
@@ -261,7 +356,6 @@ public class HomeActivity extends AppCompatActivity
                         }
                     }
                 });
-
 
 
     }

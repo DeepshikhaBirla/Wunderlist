@@ -16,7 +16,18 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="?attr/colorPrimary"
-            app:popupTheme="@style/AppTheme.PopupOverlay" />
+            app:popupTheme="@style/AppTheme.PopupOverlay" >
+
+            <SearchView
+                android:id="@+id/action_search"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:showAsAction="ifRoom|collapseActionView"
+                app:actionViewClass="android.support.v7.widget.SearchView"
+                android:hint="Search"
+                android:label="@string/app_name">
+            </SearchView>
+        </android.support.v7.widget.Toolbar>
 
     </android.support.design.widget.AppBarLayout>
 
