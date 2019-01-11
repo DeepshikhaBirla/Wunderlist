@@ -8,7 +8,7 @@ import android.os.Bundle;
 import com.intimetec.wunderlist.R;
 import com.intimetec.wunderlist.util.PreferenceManager;
 
-public class SplashActivity extends AppCompatActivity {
+public class SplashActivity extends BaseActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

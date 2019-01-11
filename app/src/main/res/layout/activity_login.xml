@@ -25,6 +25,7 @@
         android:layout_marginTop="50dp"
         android:background="@drawable/bordershape"
         android:ems="10"
+        android:singleLine="true"
         android:gravity="center"
         android:hint="Enter Email id"
         android:maxLines="1"

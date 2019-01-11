@@ -6,12 +6,12 @@
             android:id="@+id/ascending_list_menu"
             android:checked="true"
             android:title="Ascending"
-            app:showAsAction="never" />
+            app:showAsAction="collapseActionView" />
 
         <item
             android:id="@+id/descending_list_menu"
             android:title="Descending"
-            app:showAsAction="never" />
+            app:showAsAction="collapseActionView" />
     </group>
 
 </menu>

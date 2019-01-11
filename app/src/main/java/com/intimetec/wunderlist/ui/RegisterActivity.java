@@ -17,7 +17,6 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.google.firebase.firestore.SetOptions;
 import com.intimetec.wunderlist.R;
 import com.intimetec.wunderlist.data.user.User;
@@ -45,11 +44,7 @@ public class RegisterActivity extends BaseActivity {
         loginButton = findViewById(R.id.register_btn);
         registerButton = findViewById(R.id.signup_btn);
 
-        db = FirebaseFirestore.getInstance();
-        FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
-                .setTimestampsInSnapshotsEnabled(true)
-                .build();
-        db.setFirestoreSettings(settings);
+        db = getFireStoreInstance();
 
         registerButton.setOnClickListener(new View.OnClickListener() {
             @Override

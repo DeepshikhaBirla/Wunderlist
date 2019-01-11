@@ -12,15 +12,22 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.SetOptions;
 import com.intimetec.wunderlist.R;
 import com.intimetec.wunderlist.data.user.User;
 import com.intimetec.wunderlist.data.user.UserRepository;
 import com.intimetec.wunderlist.util.ConnectionUtil;
 import com.intimetec.wunderlist.util.PreferenceManager;
 import com.intimetec.wunderlist.util.Util;
+
+import java.util.HashMap;
 
 public class LoginActivity extends BaseActivity implements View.OnClickListener {
     private static final String TAG = LoginActivity.class.getCanonicalName();
@@ -85,36 +92,64 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener 
         }
     }
 
-    private void signIn(String email, String password) {
+    private void signIn(final String email, String password) {
         mFireBaseAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(LoginActivity.this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
-                        hideProgressDialog();
                         if (task.isSuccessful()) {
                             // Sign in success, update UI with the signed-in user's information
                             Log.d(TAG, "signInWithEmail:success");
                             FirebaseUser user = mFireBaseAuth.getCurrentUser();
 
                             if (user.isEmailVerified()) {
-                                PreferenceManager.setUserLogin(LoginActivity.this, true);
-                                UserRepository userRepository = new UserRepository(getApplication());
 
-                                User loginUser = new User();
-                                loginUser.setUserEmail(user.getEmail());
-                                loginUser.setUserId(user.getUid());
-                                loginUser.setUserName(user.getDisplayName());
+                                final FirebaseFirestore db = getFireStoreInstance();
 
-                                userRepository.add(loginUser);
+                                db.collection("users").document(user.getEmail()).get()
+                                        .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                                            @Override
+                                            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                                                final UserRepository userRepository = new UserRepository(getApplication());
 
-                                startActivity(new Intent(LoginActivity.this, HomeActivity.class));
-                                finish();
+                                                HashMap<String, String> userMap = (HashMap<String, String>) task.getResult().get("user");
+                                                final User loginUser = new User();
+                                                loginUser.setUserId(userMap.get("userId"));
+                                                loginUser.setUserEmail(userMap.get("userEmail"));
+                                                loginUser.setUserName(userMap.get("userName"));
+                                                loginUser.setDeviceId(Util.getDeviceId(getApplicationContext()));
+
+                                                HashMap<String, User> map = new HashMap<>();
+                                                map.put("user", loginUser);
+
+                                                db.collection("users").document(email).set(map, SetOptions.merge())
+                                                        .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                            @Override
+                                                            public void onSuccess(Void aVoid) {
+                                                                hideProgressDialog();
+                                                                userRepository.add(loginUser);
+                                                                PreferenceManager.setUserLogin(LoginActivity.this, true);
+                                                                startActivity(new Intent(LoginActivity.this, HomeActivity.class));
+                                                                finish();
+                                                            }
+                                                        })
+                                                        .addOnFailureListener(new OnFailureListener() {
+                                                            @Override
+                                                            public void onFailure(@NonNull Exception e) {
+                                                                hideProgressDialog();
+                                                            }
+                                                        });
+
+                                            }
+                                        });
                             } else {
+                                hideProgressDialog();
                                 Toast.makeText(getApplicationContext(), "Please verify your mail address", Toast.LENGTH_SHORT).show();
                             }
 
                         } else {
                             // If sign in fails, display a message to the user.
+                            hideProgressDialog();
                             Log.w(TAG, "signInWithEmail:failure", task.getException());
                             Toast.makeText(LoginActivity.this, "Authentication failed." + task.getException(),
                                     Toast.LENGTH_SHORT).show();

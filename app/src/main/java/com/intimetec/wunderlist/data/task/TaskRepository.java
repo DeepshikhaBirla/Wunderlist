@@ -5,6 +5,7 @@ import android.app.Application;
 
 import com.intimetec.wunderlist.data.Repository;
 import com.intimetec.wunderlist.data.WunderListDatabase;
+import com.intimetec.wunderlist.data.user.User;
 
 import java.util.List;
 
@@ -71,6 +72,12 @@ public class TaskRepository implements Repository<Task> {
     public List<Task> fetchUserOrderByDateInAsc() {
         return mTaskDao.fetchUserOrderByDateInAsc();
     }
+
+    public void deleteAllTasks(){
+        mTaskDao.deleteAllTasks();
+    }
+
+
 }
 
 

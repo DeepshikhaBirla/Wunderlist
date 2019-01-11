@@ -3,15 +3,18 @@ package com.intimetec.wunderlist.data.task;
 import android.arch.persistence.room.Dao;
 import android.arch.persistence.room.Delete;
 import android.arch.persistence.room.Insert;
+import android.arch.persistence.room.OnConflictStrategy;
 import android.arch.persistence.room.Query;
 import android.arch.persistence.room.Update;
+
+import com.intimetec.wunderlist.data.user.User;
 
 import java.util.List;
 
 @Dao
 public interface TaskDao {
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     public void addTask(Task task);
 
     @Delete
@@ -49,5 +52,10 @@ public interface TaskDao {
 
     @Query("SELECT * FROM Task WHERE is_finished = 0 ORDER BY date_time DESC")
     List<Task> fetchUserOrderByDateInDesc();
+
+    @Query("DELETE  FROM task")
+    public void deleteAllTasks();
+
+
 }
 

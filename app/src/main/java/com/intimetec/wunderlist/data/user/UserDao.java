@@ -3,6 +3,7 @@ package com.intimetec.wunderlist.data.user;
 import android.arch.persistence.room.Dao;
 import android.arch.persistence.room.Delete;
 import android.arch.persistence.room.Insert;
+import android.arch.persistence.room.OnConflictStrategy;
 import android.arch.persistence.room.Query;
 import android.arch.persistence.room.Update;
 
@@ -13,7 +14,7 @@ import java.util.List;
 public interface UserDao {
 
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     public void addUser(User user);
 
     @Delete
@@ -27,5 +28,8 @@ public interface UserDao {
 
     @Query("SELECT * from user LIMIT 1")
     public User fetchUser();
+
+    @Query("DELETE  FROM user")
+    public void deleteUser();
 
 }

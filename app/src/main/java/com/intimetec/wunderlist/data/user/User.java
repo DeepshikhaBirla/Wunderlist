@@ -21,6 +21,13 @@ public class User {
     @ColumnInfo(name = "user_email")
     private String userEmail;
 
+    @ColumnInfo(name = "device_id")
+    private String deviceId;
+
+    public String getDeviceId() { return deviceId; }
+
+    public void setDeviceId(String deviceId) { this.deviceId = deviceId; }
+
     public String getUserId() {
         return userId;
     }
@@ -48,9 +55,10 @@ public class User {
     @Override
     public String toString() {
         return "User{" +
-                "userId=" + userId +
+                "userId='" + userId + '\'' +
                 ", userName='" + userName + '\'' +
                 ", userEmail='" + userEmail + '\'' +
+                ", deviceId='" + deviceId + '\'' +
                 '}';
     }
 }
