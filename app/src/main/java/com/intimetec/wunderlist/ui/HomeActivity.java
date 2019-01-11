@@ -1,5 +1,6 @@
 package com.intimetec.wunderlist.ui;
 
+import android.app.ActionBar;
 import android.app.Application;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -13,6 +14,7 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
 import android.support.v7.widget.helper.ItemTouchHelper.SimpleCallback;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.support.design.widget.NavigationView;
@@ -47,6 +49,7 @@ import com.intimetec.wunderlist.data.task.TaskCategory;
 import com.intimetec.wunderlist.data.task.TaskDao;
 import com.intimetec.wunderlist.data.task.TaskRepository;
 import com.intimetec.wunderlist.data.user.User;
+import com.intimetec.wunderlist.data.user.UserRepository;
 import com.intimetec.wunderlist.util.PreferenceManager;
 
 import org.w3c.dom.Text;
@@ -55,7 +58,7 @@ import java.util.List;
 
 import static android.support.v7.widget.helper.ItemTouchHelper.*;
 
-public class HomeActivity extends AppCompatActivity
+public class HomeActivity extends BaseActivity
         implements NavigationView.OnNavigationItemSelectedListener, SearchView.OnQueryTextListener {
 
     private RecyclerView mTaskRecyclerView;
@@ -64,8 +67,11 @@ public class HomeActivity extends AppCompatActivity
     private TaskRepository mTaskRepository;
     private FirebaseFirestore db;
     private SearchView searchView;
+    private SignOutAsyncTask mSignOutAsyncTask;
     private TaskAdapter mTaskAdapter;
     private MenuItem ascendingMenuItem, descendingMenuItem;
+    private String mCategoryType = TaskCategory.AllList.toString();
+    private TextView mUserNameTxtview, mUserEmailTxtView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,17 +82,11 @@ public class HomeActivity extends AppCompatActivity
         setSupportActionBar(toolbar);
         ImageButton fab = findViewById(R.id.fab);
 
-        db = FirebaseFirestore.getInstance();
-        FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
-                .setTimestampsInSnapshotsEnabled(true)
-                .build();
-        db.setFirestoreSettings(settings);
+        db = getFireStoreInstance();
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 startActivity(new Intent(HomeActivity.this, ToDoListActivity.class));
-
-
             }
         });
 
@@ -98,6 +98,8 @@ public class HomeActivity extends AppCompatActivity
 
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+        mUserNameTxtview = navigationView.getHeaderView(0).findViewById(R.id.user_name);
+        mUserEmailTxtView = navigationView.getHeaderView(0).findViewById(R.id.user_email);
 
         mTaskRecyclerView = findViewById(R.id.recycle_list);
 
@@ -107,7 +109,7 @@ public class HomeActivity extends AppCompatActivity
             @Override
             public void onMoved(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, int fromPos, RecyclerView.ViewHolder target, int toPos, int x, int y) {
                 super.onMoved(recyclerView, viewHolder, fromPos, target, toPos, x, y);
-                Toast.makeText(getApplicationContext(), " On Move pos : "+fromPos, Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), " On Move pos : " + fromPos, Toast.LENGTH_SHORT).show();
             }
 
             public boolean onMove(RecyclerView recyclerView,
@@ -149,8 +151,12 @@ public class HomeActivity extends AppCompatActivity
 
         }).attachToRecyclerView(mTaskRecyclerView);
         searchView = findViewById(R.id.action_search);
-
         searchView.setOnQueryTextListener(this);
+        UserRepository userRepository = new UserRepository(getApplication());
+        User user = userRepository.fetchUser();
+        mUserNameTxtview.setText(user.getUserName());
+        mUserEmailTxtView.setText(user.getUserEmail());
+
     }
 
     @Override
@@ -193,7 +199,7 @@ public class HomeActivity extends AppCompatActivity
     @Override
     protected void onResume() {
         super.onResume();
-        mLoadAsyncTask = new LoadTasksAsyncTask();
+        mLoadAsyncTask = new LoadTasksAsyncTask(mCategoryType);
         mLoadAsyncTask.execute();
     }
 
@@ -207,6 +213,27 @@ public class HomeActivity extends AppCompatActivity
         }
     }
 
+    private class SignOutAsyncTask extends AsyncTask<Void, Void, Void> {
+        private TaskRepository taskRepository;
+        private UserRepository userRepository;
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            taskRepository = new TaskRepository(getApplication());
+            userRepository = new UserRepository(getApplication());
+            taskRepository.deleteAllTasks();
+            userRepository.deleteUser();
+            return null;
+            }
+
+        @Override
+        protected void onPostExecute(Void Void) {
+            super.onPostExecute(Void);
+            PreferenceManager.setUserLogin(HomeActivity.this, false);
+            startActivity(new Intent(HomeActivity.this, LoginActivity.class));
+            finish();
+        }
+    }
 
     /**
      * Class to load All tasks data from database
@@ -215,11 +242,22 @@ public class HomeActivity extends AppCompatActivity
     private class LoadTasksAsyncTask extends AsyncTask<Void, Void, List<Task>> {
 
         List<Task> allTask = null;
+        String param = TaskCategory.AllList.toString();
+
+        public LoadTasksAsyncTask(String param) {
+            this.param = param;
+        }
 
         @Override
         protected List<Task> doInBackground(Void... voids) {
 
-            allTask = new TaskRepository(getApplication()).fetchAll();
+            if (param.equals(TaskCategory.AllList.toString())) {
+                allTask = new TaskRepository(getApplication()).fetchAll();
+            } else if (param.equals(TaskCategory.IsFinished.toString())) {
+                allTask = new TaskRepository(getApplication()).fetchAllFinishedTasks();
+            } else {
+                allTask = new TaskRepository(getApplication()).fetchTodoListByCategory(param);
+            }
             return allTask;
         }
 
@@ -251,7 +289,7 @@ public class HomeActivity extends AppCompatActivity
         descendingMenuItem = menu.findItem(R.id.descending_list_menu);
         return true;
 
-}
+    }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -276,7 +314,6 @@ public class HomeActivity extends AppCompatActivity
             mTaskRecyclerView.setAdapter(mTaskAdapter);
 
 
-
         }
 
         return super.onOptionsItemSelected(item);
@@ -291,43 +328,43 @@ public class HomeActivity extends AppCompatActivity
         mTaskRepository = new TaskRepository(getApplication());
 
         if (id == R.id.all_list) {
-            List<Task> allTasks = mTaskRepository.fetchAllToDos();
-            mTaskAdapter = new TaskAdapter(allTasks, getApplication(), getApplicationContext());
-            mTaskRecyclerView.setAdapter(mTaskAdapter);
+            mCategoryType = TaskCategory.AllList.toString();
+            mLoadAsyncTask = new LoadTasksAsyncTask(mCategoryType);
+            mLoadAsyncTask.execute();
 
             // Handle the camera action
         } else if (id == R.id.nav_default) {
-            List<Task> allTasks = mTaskRepository.fetchTodoListByCategory(TaskCategory.Default.toString());
-            mTaskAdapter = new TaskAdapter(allTasks, getApplication(), getApplicationContext());
-            mTaskRecyclerView.setAdapter(mTaskAdapter);
+            mCategoryType = TaskCategory.Default.toString();
+            mLoadAsyncTask = new LoadTasksAsyncTask(mCategoryType);
+            mLoadAsyncTask.execute();
         } else if (id == R.id.nav_personal) {
-            List<Task> allTasks = mTaskRepository.fetchTodoListByCategory(TaskCategory.Personal.toString());
-            mTaskAdapter = new TaskAdapter(allTasks, getApplication(), getApplicationContext());
-            mTaskRecyclerView.setAdapter(mTaskAdapter);
+            mCategoryType = TaskCategory.Personal.toString();
+            mLoadAsyncTask = new LoadTasksAsyncTask(mCategoryType);
+            mLoadAsyncTask.execute();
 
         } else if (id == R.id.nav_shopping) {
-            List<Task> allTasks = mTaskRepository.fetchTodoListByCategory(TaskCategory.Shopping.toString());
-            mTaskAdapter = new TaskAdapter(allTasks, getApplication(), getApplicationContext());
-            mTaskRecyclerView.setAdapter(mTaskAdapter);
+            mCategoryType = TaskCategory.Shopping.toString();
+            mLoadAsyncTask = new LoadTasksAsyncTask(mCategoryType);
+            mLoadAsyncTask.execute();
 
         } else if (id == R.id.nav_wishlist) {
-            List<Task> allTasks = mTaskRepository.fetchTodoListByCategory(TaskCategory.WishList.toString());
-            mTaskAdapter = new TaskAdapter(allTasks, getApplication(), getApplicationContext());
-            mTaskRecyclerView.setAdapter(mTaskAdapter);
+            mCategoryType = TaskCategory.WishList.toString();
+            mLoadAsyncTask = new LoadTasksAsyncTask(mCategoryType);
+            mLoadAsyncTask.execute();
 
         } else if (id == R.id.nav_work) {
-            List<Task> allTasks = mTaskRepository.fetchTodoListByCategory(TaskCategory.Work.toString());
-            mTaskAdapter = new TaskAdapter(allTasks, getApplication(), getApplicationContext());
-            mTaskRecyclerView.setAdapter(mTaskAdapter);
+            mCategoryType = TaskCategory.Work.toString();
+            mLoadAsyncTask = new LoadTasksAsyncTask(mCategoryType);
+            mLoadAsyncTask.execute();
 
-        }else if(id == R.id.nav_finished){
-            List<Task> allTasks = mTaskRepository.fetchAllFinishedTasks();
-            mTaskAdapter = new TaskAdapter(allTasks, getApplication(), getApplicationContext());
-            mTaskRecyclerView.setAdapter(mTaskAdapter);
+        } else if (id == R.id.nav_finished) {
+            mCategoryType = TaskCategory.IsFinished.toString();
+            mLoadAsyncTask = new LoadTasksAsyncTask(mCategoryType);
+            mLoadAsyncTask.execute();
 
         } else if (id == R.id.nav_signout) {
-            PreferenceManager.setUserLogin(HomeActivity.this, false);
-            startActivity(new Intent(HomeActivity.this, LoginActivity.class));
+            mSignOutAsyncTask = new SignOutAsyncTask();
+            mSignOutAsyncTask.execute();
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);

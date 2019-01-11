@@ -15,12 +15,18 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QuerySnapshot;
 import com.intimetec.wunderlist.R;
 import com.intimetec.wunderlist.data.user.User;
 import com.intimetec.wunderlist.data.user.UserRepository;
 import com.intimetec.wunderlist.util.ConnectionUtil;
 import com.intimetec.wunderlist.util.PreferenceManager;
 import com.intimetec.wunderlist.util.Util;
+
+import java.util.HashMap;
 
 public class LoginActivity extends BaseActivity implements View.OnClickListener {
     private static final String TAG = LoginActivity.class.getCanonicalName();
@@ -97,18 +103,26 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener 
                             FirebaseUser user = mFireBaseAuth.getCurrentUser();
 
                             if (user.isEmailVerified()) {
-                                PreferenceManager.setUserLogin(LoginActivity.this, true);
-                                UserRepository userRepository = new UserRepository(getApplication());
 
-                                User loginUser = new User();
-                                loginUser.setUserEmail(user.getEmail());
-                                loginUser.setUserId(user.getUid());
-                                loginUser.setUserName(user.getDisplayName());
+                                FirebaseFirestore db = getFireStoreInstance();
 
-                                userRepository.add(loginUser);
+                                db.collection("users").document(user.getEmail()).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                                    @Override
+                                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                                        final UserRepository userRepository = new UserRepository(getApplication());
 
-                                startActivity(new Intent(LoginActivity.this, HomeActivity.class));
-                                finish();
+                                        HashMap<String, String> userMap = (HashMap<String, String>) task.getResult().get("user");
+                                        User loginUser = new User();
+                                        loginUser.setUserId(userMap.get("userId"));
+                                        loginUser.setUserEmail(userMap.get("userEmail"));
+                                        loginUser.setUserName(userMap.get("userName"));
+
+                                        userRepository.add(loginUser);
+                                        PreferenceManager.setUserLogin(LoginActivity.this, true);
+                                        startActivity(new Intent(LoginActivity.this, HomeActivity.class));
+                                        finish();
+                                    }
+                                });
                             } else {
                                 Toast.makeText(getApplicationContext(), "Please verify your mail address", Toast.LENGTH_SHORT).show();
                             }

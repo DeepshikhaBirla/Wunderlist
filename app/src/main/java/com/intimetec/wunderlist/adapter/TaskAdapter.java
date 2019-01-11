@@ -124,7 +124,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
             Task task = allTasks.get(adapterPosition);
 
             if (view == checkBox) {
-                task.setIsFinished(checkBox.isChecked() ? 0 : 1) ;
+                task.setIsFinished(checkBox.isChecked() ? 1 : 0) ;
                 new UpdateTaskAsyncTask(task).execute();
                 allTasks.remove(adapterPosition);
             } else {

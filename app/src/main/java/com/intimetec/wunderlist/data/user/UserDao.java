@@ -28,4 +28,7 @@ public interface UserDao {
     @Query("SELECT * from user LIMIT 1")
     public User fetchUser();
 
+    @Query("DELETE  FROM user")
+    public void deleteUser();
+
 }

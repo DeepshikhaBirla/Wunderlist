@@ -33,7 +33,9 @@ import com.intimetec.wunderlist.data.task.TaskCategory;
 import com.intimetec.wunderlist.data.task.TaskRepository;
 import com.intimetec.wunderlist.data.user.User;
 import com.intimetec.wunderlist.data.user.UserRepository;
+import com.intimetec.wunderlist.util.DateUtil;
 
+import java.sql.Time;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -100,9 +102,8 @@ public class ToDoListActivity extends BaseActivity implements View.OnClickListen
             Task task = (Task) data.getParcelable("task");
             if (task != null) {
                 txtName.setText(task.getTaskName());
-
-
-                txtDate.setText(task.getDateTime().toString());
+                txtDate.setText(DateUtil.getDateValue(task.getDateTime()));
+                txtTime.setText(DateUtil.getTimeValue(task.getDateTime()));
                 TaskCategory taskCategory = TaskCategory.valueOf(task.getCategory());
                 categorySpinner.setSelection(taskCategory.getPosition());
 
@@ -141,7 +142,6 @@ public class ToDoListActivity extends BaseActivity implements View.OnClickListen
 
             DateFormat dateFormat = new SimpleDateFormat("dd-mm-yyyy hh:mm:ss");
             String strdate = dateFormat.format(date);
-
 
             DatePickerDialog datePickerDialog = new DatePickerDialog(this,
                     new DatePickerDialog.OnDateSetListener() {
@@ -262,16 +262,19 @@ public class ToDoListActivity extends BaseActivity implements View.OnClickListen
 
     private void attemptUpdate(Task task) {
         String taskName = txtName.getText().toString().trim();
-        String dateTime = txtDate.getText().toString().trim().concat(txtTime.getText().toString());
-
-
-        Date date = new Date();
+        String dateTime = txtDate.getText().toString().trim()+" "+txtTime.getText().toString()+":00";
 
         txtName.setError(null);
         txtDate.setError(null);
         txtTime.setError(null);
 
-
+        DateFormat df = new SimpleDateFormat("dd-MM-yyyy hh:mm:ss");
+        Date date = null;
+        try {
+            date = df.parse(dateTime);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
         if (TextUtils.isEmpty(taskName)) {
             txtName.setError(getString(R.string.empty_field_error));
         } else if (TextUtils.isEmpty(dateTime)) {
@@ -280,21 +283,29 @@ public class ToDoListActivity extends BaseActivity implements View.OnClickListen
             txtTime.setError(getString(R.string.empty_field_error));
         } else {
 
+
             showProgressDialog();
 
             User user = mUserRepository.fetchUser();
 
+
             task.setTaskName(taskName);
             task.setDateTime(date);
+
 
             task.setCategory(categorySpinner.getSelectedItem().toString());
             mTaskRepository.update(task);
 
+            task = mTaskRepository.fetchTaskByName(taskName);
+
             Map<String, Object> taskMap = new HashMap<>();
             taskMap.put("taskName", taskName);
             taskMap.put("taskId", task.getTaskId());
-            taskMap.put("datetime", dateTime);
+            taskMap.put("dateTime", dateTime);
+
             taskMap.put("taskCategory", task.getCategory());
+            taskMap.put("isFinished", task.getIsFinished());
+
 
             db.collection("users")
                     .document(user.getUserEmail())

@@ -6,6 +6,8 @@ import android.arch.persistence.room.Insert;
 import android.arch.persistence.room.Query;
 import android.arch.persistence.room.Update;
 
+import com.intimetec.wunderlist.data.user.User;
+
 import java.util.List;
 
 @Dao
@@ -49,5 +51,10 @@ public interface TaskDao {
 
     @Query("SELECT * FROM Task WHERE is_finished = 0 ORDER BY date_time DESC")
     List<Task> fetchUserOrderByDateInDesc();
+
+    @Query("DELETE  FROM task")
+    public void deleteAllTasks();
+
+
 }
 

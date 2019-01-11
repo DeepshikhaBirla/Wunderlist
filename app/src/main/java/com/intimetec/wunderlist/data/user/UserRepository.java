@@ -43,4 +43,8 @@ public class UserRepository implements Repository<User> {
     public User fetchUser() {
         return mUserDao.fetchUser();
     }
+
+    public void deleteUser(){
+         mUserDao.deleteUser();
+    }
 }
