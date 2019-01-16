@@ -5,7 +5,6 @@ import android.app.TimePickerDialog;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -16,11 +15,10 @@ import android.widget.Spinner;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.intimetec.wunderlist.R;
 import com.intimetec.wunderlist.data.task.Task;
 import com.intimetec.wunderlist.data.task.TaskCategory;
@@ -35,9 +33,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class ToDoListActivity extends BaseActivity implements View.OnClickListener {
     ImageButton btnDatePicker, btnTimePicker;
@@ -57,11 +53,7 @@ public class ToDoListActivity extends BaseActivity implements View.OnClickListen
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_to_do_list);
 
-        db = FirebaseFirestore.getInstance();
-        FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
-                .setTimestampsInSnapshotsEnabled(true)
-                .build();
-        db.setFirestoreSettings(settings);
+        db = getFireStoreInstance();
 
         btnDatePicker = findViewById(R.id.calender_img_btn);
         btnTimePicker = findViewById(R.id.time_img_btn);
@@ -217,43 +209,33 @@ public class ToDoListActivity extends BaseActivity implements View.OnClickListen
 
             task = mTaskRepository.fetchTaskByName(taskName);
 
-            Map<String, Object> taskMap = new HashMap<>();
-            taskMap.put("taskName", taskName);
-            taskMap.put("taskId", task.getTaskId());
-            taskMap.put("dateTime", dateTime);
-
-            taskMap.put("taskCategory", task.getCategory());
-            taskMap.put("isFinished", task.getIsFinished());
-
-
-            db.collection("users")
-                    .document(user.getUserEmail())
-                    .update("tasks", FieldValue.arrayUnion(taskMap))
+            db.collection("users").document(user.getUserEmail())
+                    .collection("tasks")
+                    .document(String.valueOf(task.getTaskId()))
+                    .set(task)
                     .addOnSuccessListener(new OnSuccessListener<Void>() {
                         @Override
                         public void onSuccess(Void aVoid) {
-                            Log.i(ToDoListActivity.class.getCanonicalName(), "success");
                             hideProgressDialog();
+                            Toast.makeText(ToDoListActivity.this, "Task Updated Successfully", Toast.LENGTH_LONG).show();
                             finish();
                         }
-                    }).addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception e) {
-                    Log.i(ToDoListActivity.class.getCanonicalName(), "Failed");
-                    hideProgressDialog();
-                    finish();
-                }
-            });
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            hideProgressDialog();
+                            Toast.makeText(ToDoListActivity.this, "Failed to set data : " + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                        }
+                    });
 
-
-            Toast.makeText(this, "Task Saved Successfully", Toast.LENGTH_LONG).show();
         }
 
 
     }
 
 
-    private void attemptUpdate(Task task) {
+    private void attemptUpdate(final Task task) {
         String taskName = txtName.getText().toString().trim();
         String dateTime = txtDate.getText().toString().trim() + " " + txtTime.getText().toString() + ":00";
 
@@ -283,41 +265,29 @@ public class ToDoListActivity extends BaseActivity implements View.OnClickListen
             task.setDateTime(date);
 
             task.setCategory(categorySpinner.getSelectedItem().toString());
-            mTaskRepository.update(task);
 
-            task = mTaskRepository.fetchTaskByName(taskName);
-
-            Map<String, Object> taskMap = new HashMap<>();
-            taskMap.put("taskName", taskName);
-            taskMap.put("taskId", task.getTaskId());
-            taskMap.put("dateTime", dateTime);
-
-            taskMap.put("taskCategory", task.getCategory());
-            taskMap.put("isFinished", task.getIsFinished());
-
-            db.collection("users")
-                    .document(user.getUserEmail())
-                    .update("tasks", FieldValue.arrayUnion(taskMap))
+            db.collection("users").document(user.getUserEmail())
+                    .collection("tasks")
+                    .document(String.valueOf(task.getTaskId()))
+                    .set(task)
                     .addOnSuccessListener(new OnSuccessListener<Void>() {
                         @Override
                         public void onSuccess(Void aVoid) {
-                            Log.i(ToDoListActivity.class.getCanonicalName(), "success");
                             hideProgressDialog();
+                            mTaskRepository.update(task);
+                            Toast.makeText(ToDoListActivity.this, "Task Updated Successfully", Toast.LENGTH_LONG).show();
                             finish();
                         }
                     })
                     .addOnFailureListener(new OnFailureListener() {
                         @Override
                         public void onFailure(@NonNull Exception e) {
-                            Log.i(ToDoListActivity.class.getCanonicalName(), "Failed");
                             hideProgressDialog();
-                            finish();
+                            Toast.makeText(ToDoListActivity.this, "Failed to set data : " + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
                         }
                     });
 
-            Toast.makeText(this, "Task Updated Successfully", Toast.LENGTH_LONG).show();
         }
-
 
     }
 }

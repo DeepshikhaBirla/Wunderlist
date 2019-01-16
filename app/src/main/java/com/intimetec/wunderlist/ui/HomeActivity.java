@@ -16,6 +16,7 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.support.v7.widget.helper.ItemTouchHelper;
 import android.support.v7.widget.helper.ItemTouchHelper.SimpleCallback;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -151,7 +152,7 @@ public class HomeActivity extends BaseActivity
             public void onEvent(@Nullable DocumentSnapshot snapshot,
                                 @Nullable FirebaseFirestoreException e) {
 
-                if (snapshot != null && snapshot.get("user") != null) {
+                if (snapshot != null && snapshot.get("user") != null && !TextUtils.isEmpty(snapshot.getString("user.deviceId"))) {
                     if (PreferenceManager.isUserLogin(getApplicationContext()) &&
                             !Util.getDeviceId(getApplicationContext()).equals(snapshot.getString("user.deviceId"))) {
                         Toast.makeText(getApplicationContext(), "User logged in from different device!", Toast.LENGTH_LONG).show();
@@ -172,7 +173,9 @@ public class HomeActivity extends BaseActivity
 
     @Override
     public boolean onQueryTextChange(String newText) {
-        mTaskAdapter.filter(newText);
+        if (mTaskAdapter != null) {
+            mTaskAdapter.filter(newText);
+        }
         return false;
     }
 
@@ -190,6 +193,16 @@ public class HomeActivity extends BaseActivity
         protected Void doInBackground(Void... voids) {
             taskRepository = new TaskRepository(getApplication());
             taskRepository.delete(task);
+
+            UserRepository userRepository = new UserRepository(getApplication());
+            User user = userRepository.fetchUser();
+
+            db.collection("users")
+                    .document(user.getUserEmail())
+                    .collection("tasks")
+                    .document(String.valueOf(task.getTaskId()))
+                    .delete();
+
             return null;
         }
 
@@ -263,6 +276,7 @@ public class HomeActivity extends BaseActivity
             } else {
                 allTask = new TaskRepository(getApplication()).fetchTodoListByCategory(param);
             }
+
             return allTask;
         }
 
@@ -270,10 +284,37 @@ public class HomeActivity extends BaseActivity
         protected void onPostExecute(List<Task> allTask) {
             super.onPostExecute(allTask);
 
-            mTaskRecyclerView.setLayoutManager(new LinearLayoutManager(HomeActivity.this));
-            mTaskAdapter = new TaskAdapter(allTask, getApplication(), getApplicationContext());
-            mTaskRecyclerView.setAdapter(mTaskAdapter);
+            if (param == TaskCategory.AllList.toString() && (allTask == null || allTask.size() == 0)) {
+                UserRepository userRepository = new UserRepository(getApplication());
+                User user = userRepository.fetchUser();
+
+                db.collection("users")
+                        .document(user.getUserEmail())
+                        .collection("tasks")
+                        .get()
+                        .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                            @Override
+                            public void onComplete(@NonNull com.google.android.gms.tasks.Task<QuerySnapshot> task) {
+                                if (task.isSuccessful()) {
+                                    List allTask = task.getResult().toObjects(Task.class);
+                                    TaskRepository taskRepository = new TaskRepository(getApplication());
+                                    taskRepository.addTasks(allTask);
+                                    allTask = new TaskRepository(getApplication()).fetchAll();
+                                    setTaskAdapter(allTask);
+                                }
+                            }
+                        });
+            } else {
+                setTaskAdapter(allTask);
+            }
+
         }
+    }
+
+    private void setTaskAdapter(List<Task> allTask) {
+        mTaskRecyclerView.setLayoutManager(new LinearLayoutManager(HomeActivity.this));
+        mTaskAdapter = new TaskAdapter(allTask, getApplication(), getApplicationContext());
+        mTaskRecyclerView.setAdapter(mTaskAdapter);
     }
 
     @Override
@@ -377,29 +418,5 @@ public class HomeActivity extends BaseActivity
         return true;
     }
 
-    private void getData() {
-        db.collection("users")
-                .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull com.google.android.gms.tasks.Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                Log.d("HomeActivity", document.getId() + " => " + document.getData());
-                                User user = document.toObject(User.class);
-                                if (user != null) {
-                                    System.out.println(user.toString());
-
-                                }
-                            }
-
-                        } else {
-                            Log.w("HomeActivity", "Error Getting Data", task.getException());
-                        }
-                    }
-                });
-
-
-    }
 }
 

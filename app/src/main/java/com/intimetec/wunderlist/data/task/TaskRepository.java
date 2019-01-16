@@ -27,6 +27,10 @@ public class TaskRepository implements Repository<Task> {
         mTaskDao.addTask(task);
     }
 
+    public void addTasks(List<Task> allTasks) {
+        mTaskDao.addTasks(allTasks);
+    }
+
     @Override
     public void update(Task task) {
         mTaskDao.updateTask(task);

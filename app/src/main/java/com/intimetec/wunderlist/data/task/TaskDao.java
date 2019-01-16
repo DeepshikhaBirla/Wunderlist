@@ -17,6 +17,9 @@ public interface TaskDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     public void addTask(Task task);
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    public void addTasks(List<Task> tasks);
+
     @Delete
     public void deleteTask(Task task);
 

@@ -20,10 +20,6 @@ public class WunderListApplication extends Application {
         db.setFirestoreSettings(settings);
     }
 
-    public static Application getApplication() {
-        return getApplication();
-    }
-
     public static FirebaseFirestore getFireStoreInstance() {
         return db;
     }

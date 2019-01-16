@@ -11,10 +11,17 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.intimetec.wunderlist.R;
+import com.intimetec.wunderlist.WunderListApplication;
 import com.intimetec.wunderlist.data.task.Task;
 import com.intimetec.wunderlist.data.task.TaskRepository;
+import com.intimetec.wunderlist.data.user.User;
+import com.intimetec.wunderlist.data.user.UserRepository;
 import com.intimetec.wunderlist.ui.ToDoListActivity;
 import com.intimetec.wunderlist.util.DateUtil;
 
@@ -72,28 +79,23 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
     }
 
     public void filter(String queryText) {
-        {
-            allTasks.clear();
 
-            if(queryText.isEmpty())
-            {
-                allTasks.addAll(copyTask);
-            }
-            else
-            {
+        allTasks.clear();
 
-                for(Task task: copyTask)
-                {
-                    if(task.getTaskName().toLowerCase().contains(queryText.toLowerCase()))
-                    {
-                        allTasks.add(task);
-                    }
+        if (queryText.isEmpty()) {
+            allTasks.addAll(copyTask);
+        } else {
+
+            for (Task task : copyTask) {
+                if (task.getTaskName().toLowerCase().contains(queryText.toLowerCase())) {
+                    allTasks.add(task);
                 }
-
             }
 
-            notifyDataSetChanged();
         }
+
+        notifyDataSetChanged();
+
     }
 
 
@@ -124,7 +126,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
             Task task = allTasks.get(adapterPosition);
 
             if (view == checkBox) {
-                task.setIsFinished(checkBox.isChecked() ? 1 : 0) ;
+                task.setIsFinished(checkBox.isChecked() ? 1 : 0);
                 new UpdateTaskAsyncTask(task).execute();
                 allTasks.remove(adapterPosition);
             } else {
@@ -145,8 +147,29 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
 
         @Override
         protected Void doInBackground(Void... voids) {
-            TaskRepository taskRepository = new TaskRepository(mApplication);
+            final TaskRepository taskRepository = new TaskRepository(mApplication);
             taskRepository.update(task);
+            FirebaseFirestore db = WunderListApplication.getFireStoreInstance();
+
+            UserRepository userRepository = new UserRepository(mApplication);
+            User user = userRepository.fetchUser();
+
+            db.collection("users").document(user.getUserEmail())
+                    .collection("tasks")
+                    .document(String.valueOf(task.getTaskId()))
+                    .set(task)
+                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+                            Toast.makeText(mContext, "Task Updated Successfully", Toast.LENGTH_LONG).show();
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            Toast.makeText(mContext, "Failed to set data : " + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                        }
+                    });
             return null;
         }
 

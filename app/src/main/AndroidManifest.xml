@@ -39,7 +39,8 @@
             android:theme="@style/AppTheme.NoActionBar" />
         <activity android:name=".ui.ToDoListActivity" />
 
-
+        <receiver
+            android:name=".data.task.TaskAlarm"></receiver>
     </application>
 
 </manifest>
