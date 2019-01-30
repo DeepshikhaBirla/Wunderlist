@@ -35,6 +35,10 @@
             android:id="@+id/nav_finished"
             android:icon="@drawable/work"
             android:title="@string/Finished" />
+        <item
+            android:id="@+id/about_us"
+            android:icon="@drawable/abuts"
+            android:title="About Us"/>
 
 
         <item

@@ -408,7 +408,10 @@ public class HomeActivity extends BaseActivity
             mLoadAsyncTask = new LoadTasksAsyncTask(mCategoryType);
             mLoadAsyncTask.execute();
 
-        } else if (id == R.id.nav_signout) {
+        } else if (id == R.id.about_us){
+            startActivity(new Intent(HomeActivity.this, AboutUs.class));
+
+         }else if (id == R.id.nav_signout) {
             mSignOutAsyncTask = new SignOutAsyncTask();
             mSignOutAsyncTask.execute();
         }

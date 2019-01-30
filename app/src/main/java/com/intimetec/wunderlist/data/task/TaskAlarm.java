@@ -17,7 +17,9 @@ import android.widget.Toast;
 import com.intimetec.wunderlist.R;
 import com.intimetec.wunderlist.WunderListApplication;
 import com.intimetec.wunderlist.ui.HomeActivity;
+import com.intimetec.wunderlist.util.DateUtil;
 
+import java.util.Date;
 import java.util.List;
 
 public class TaskAlarm extends BroadcastReceiver {
@@ -33,10 +35,18 @@ public class TaskAlarm extends BroadcastReceiver {
         Log.d("on receive called", allTasks.toString());
 
         for (Task task : allTasks) {
+            long diff = task.getDateTime().getTime() - System.currentTimeMillis();
+            long diffMinutes = diff / (60 * 1000) % 60;
+            int diffInDays = (int) ((task.getDateTime().getTime() - System.currentTimeMillis()) / (1000 * 60 * 60 * 24));
+
+            if((diffInDays > 1)||(diffMinutes == 15 || diffMinutes == 14)||( diffMinutes >= 0 && diffMinutes <=2)){
+                showNotification(context, task.getTaskName(), DateUtil.getDateValue(task.getDateTime()));
+
+            }
 
         }
-
     }
+
 
     private void showNotification(Context context, String taskName, String taskDate) {
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
@@ -55,7 +65,7 @@ public class TaskAlarm extends BroadcastReceiver {
 
         NotificationCompat.Builder builder =
                 new NotificationCompat.Builder(context, taskNotificationChannelId)
-                        .setSmallIcon(R.drawable.work)
+                        .setSmallIcon(R.drawable.icon)
                         .setContentTitle(taskName)
                         .setContentText(taskDate)
                         .setWhen(System.currentTimeMillis())

@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/wunder"
+    android:background="@drawable/bgg"
     android:paddingLeft="30dp"
     android:paddingRight="30dp"
     tools:context=".ui.RegisterActivity">
@@ -70,11 +70,11 @@
 
         <Button
             android:id="@+id/signup_btn"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:background="@drawable/roundshape"
-            android:backgroundTint="@android:color/holo_red_dark"
+            android:background="@drawable/bordershape"
+            android:backgroundTint="#800000"
             android:gravity="center"
             android:paddingLeft="40dp"
             android:paddingRight="40dp"
@@ -98,7 +98,7 @@
             android:layout_weight="1"
             android:gravity="center_horizontal"
             android:text="Already register ??"
-            android:textColor="@android:color/white"
+            android:textColor="#800000"
             android:textSize="15dp" />
 
         <TextView
@@ -109,7 +109,7 @@
             android:background="@android:color/transparent"
             android:gravity="center_horizontal"
             android:text="Login"
-            android:textColor="@android:color/white" />
+            android:textColor="#800000" />
     </LinearLayout>
 
 </RelativeLayout>

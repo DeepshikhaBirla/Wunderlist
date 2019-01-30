@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingLeft="30dp"
+    android:paddingRight="30dp"
+    android:background="@drawable/bgg"
+    tools:context=".ui.AboutUs">
+    <TextView
+        android:id="@+id/txtab"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="ABOUT US"
+        android:gravity="center"
+        android:textColor="#800000"
+        android:layout_marginTop="30dp"
+        android:textSize="40dp"/>
+
+    <TextView
+        android:id="@+id/about_us"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="20dp"
+        android:textColor="#000"
+        android:layout_below="@+id/txtab"
+        android:layout_marginTop="20dp"
+        android:text="Wunderlist is the easiest way to get stuff done. Whether you’re planning a holiday, sharing a shopping list with a partner or managing multiple work projects, Wunderlist is here to help you tick off all your personal and professional to-dos.
+                 Important Feature:Swipe Left To Write For Delete Task"/>
+
+</RelativeLayout>

@@ -18,5 +18,6 @@
     <string name="Wishlist">Wishlist</string>
     <string name="Work">Work</string>
     <string name="Finished">Finished</string>
+    <string name="About_Us">About Us</string>
     <string name="SignOut">Sign Out</string>
 </resources>

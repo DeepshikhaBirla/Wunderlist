@@ -1,8 +1,9 @@
 package com.intimetec.wunderlist.ui;
 
 import android.content.Intent;
-import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
@@ -32,12 +33,10 @@ public class RegisterActivity extends BaseActivity {
     private Button loginButton, registerButton;
 
     private FirebaseFirestore db;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
-
         registerEmailEditTxt = findViewById(R.id.email_edit_txt1);
         registerPasswordEditTxt = findViewById(R.id.password_edit_txt1);
         userNameEditTxt = findViewById(R.id.name_edit_text);
