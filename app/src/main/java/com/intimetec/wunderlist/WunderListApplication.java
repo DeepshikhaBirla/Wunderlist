@@ -1,7 +1,6 @@
 package com.intimetec.wunderlist;
 
 import android.app.Application;
-import android.os.Bundle;
 
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;

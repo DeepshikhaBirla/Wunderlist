@@ -7,8 +7,6 @@ import android.arch.persistence.room.OnConflictStrategy;
 import android.arch.persistence.room.Query;
 import android.arch.persistence.room.Update;
 
-import com.intimetec.wunderlist.data.user.User;
-
 import java.util.List;
 
 @Dao
@@ -43,18 +41,30 @@ public interface TaskDao {
     public Task fetchTodoByName(String taskName);
 
 
-
     @Query("SELECT * FROM task WHERE category LIKE :search & is_finished = 0")
     public List<Task> fetchTasksByCategoryName(String search);
 
     @Query("DELETE FROM task")
     void deleteAll();
 
+    @Query("SELECT * FROM Task WHERE (category LIKE :categoryType AND is_finished = 0) ORDER BY date_time ASC")
+    List<Task> fetchUserOrderByDateInAsc(String categoryType);
+
     @Query("SELECT * FROM Task WHERE is_finished = 0 ORDER BY date_time ASC")
     List<Task> fetchUserOrderByDateInAsc();
 
-    @Query("SELECT * FROM Task WHERE is_finished = 0 ORDER BY date_time DESC")
+    @Query("SELECT * FROM Task WHERE is_finished = 1  ORDER BY date_time ASC")
+    List<Task> fetchAllFinishedToDosInAsc();
+
+    @Query("SELECT * FROM Task WHERE (category LIKE :categoryType AND is_finished = 0)  ORDER BY date_time DESC")
+    List<Task> fetchUserOrderByDateInDesc(String categoryType);
+
+    @Query("SELECT * FROM Task WHERE is_finished = 0  ORDER BY date_time DESC")
     List<Task> fetchUserOrderByDateInDesc();
+
+    @Query("SELECT * FROM Task WHERE is_finished = 1  ORDER BY date_time DESC")
+    List<Task> fetchAllFinishedToDosInDesc();
+
 
     @Query("DELETE  FROM task")
     public void deleteAllTasks();

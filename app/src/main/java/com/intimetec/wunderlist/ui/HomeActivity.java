@@ -17,7 +17,6 @@ import android.support.v7.widget.Toolbar;
 import android.support.v7.widget.helper.ItemTouchHelper;
 import android.support.v7.widget.helper.ItemTouchHelper.SimpleCallback;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -32,7 +31,6 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.intimetec.wunderlist.R;
 import com.intimetec.wunderlist.WunderListApplication;
@@ -60,7 +58,9 @@ public class HomeActivity extends BaseActivity
     private TaskAdapter mTaskAdapter;
     private MenuItem ascendingMenuItem, descendingMenuItem;
     private String mCategoryType = TaskCategory.AllList.toString();
-    private TextView mUserNameTxtview, mUserEmailTxtView;
+    private TextView mUserNameTxtview, mUserEmailTxtView, empty;
+    private boolean isAscending = true;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,7 +75,9 @@ public class HomeActivity extends BaseActivity
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startActivity(new Intent(HomeActivity.this, ToDoListActivity.class));
+                Intent intent = new Intent(HomeActivity.this, ToDoListActivity.class);
+                intent.putExtra("categoryType", mCategoryType);
+                startActivity(intent);
             }
         });
 
@@ -91,6 +93,7 @@ public class HomeActivity extends BaseActivity
         mUserEmailTxtView = navigationView.getHeaderView(0).findViewById(R.id.user_email);
 
         mTaskRecyclerView = findViewById(R.id.recycle_list);
+        empty = findViewById(R.id.empty_view);
 
         new ItemTouchHelper(new SimpleCallback(ItemTouchHelper.UP | ItemTouchHelper.DOWN,
                 ItemTouchHelper.LEFT) {
@@ -253,9 +256,6 @@ public class HomeActivity extends BaseActivity
         }
     }
 
-    /**
-     * Class to load All tasks data from database
-     */
 
     private class LoadTasksAsyncTask extends AsyncTask<Void, Void, List<Task>> {
 
@@ -269,14 +269,24 @@ public class HomeActivity extends BaseActivity
         @Override
         protected List<Task> doInBackground(Void... voids) {
 
-            if (param.equals(TaskCategory.AllList.toString())) {
-                allTask = new TaskRepository(getApplication()).fetchAll();
-            } else if (param.equals(TaskCategory.IsFinished.toString())) {
-                allTask = new TaskRepository(getApplication()).fetchAllFinishedTasks();
+            mTaskRepository = new TaskRepository(getApplication());
+            if (isAscending) {
+                if (param.equals(TaskCategory.AllList.toString())) {
+                    allTask = mTaskRepository.fetchUserOrderByDateInAsc();
+                } else if (param.equals(TaskCategory.IsFinished.toString())) {
+                    allTask = mTaskRepository.fetchAllFinishedToDosInAsc();
+                } else {
+                    allTask = mTaskRepository.fetchUserOrderByDateInAsc(mCategoryType);
+                }
             } else {
-                allTask = new TaskRepository(getApplication()).fetchTodoListByCategory(param);
+                if (param.equals(TaskCategory.AllList.toString())) {
+                    allTask = mTaskRepository.fetchUserOrderByDateInDesc();
+                } else if (param.equals(TaskCategory.IsFinished.toString())) {
+                    allTask = mTaskRepository.fetchAllFinishedToDosInDesc();
+                } else {
+                    allTask = mTaskRepository.fetchUserOrderByDateInDesc(mCategoryType);
+                }
             }
-
             return allTask;
         }
 
@@ -297,9 +307,14 @@ public class HomeActivity extends BaseActivity
                             public void onComplete(@NonNull com.google.android.gms.tasks.Task<QuerySnapshot> task) {
                                 if (task.isSuccessful()) {
                                     List allTask = task.getResult().toObjects(Task.class);
-                                    TaskRepository taskRepository = new TaskRepository(getApplication());
-                                    taskRepository.addTasks(allTask);
-                                    allTask = new TaskRepository(getApplication()).fetchAll();
+
+                                    mTaskRepository.addTasks(allTask);
+                                    if (isAscending) {
+                                        allTask = mTaskRepository.fetchAll();
+                                    } else {
+                                        allTask = mTaskRepository.fetchAll();
+                                    }
+
                                     setTaskAdapter(allTask);
                                 }
                             }
@@ -312,9 +327,20 @@ public class HomeActivity extends BaseActivity
     }
 
     private void setTaskAdapter(List<Task> allTask) {
-        mTaskRecyclerView.setLayoutManager(new LinearLayoutManager(HomeActivity.this));
-        mTaskAdapter = new TaskAdapter(allTask, getApplication(), getApplicationContext());
-        mTaskRecyclerView.setAdapter(mTaskAdapter);
+
+        if (allTask.isEmpty()) {
+            mTaskRecyclerView.setVisibility(View.GONE);
+            empty.setVisibility(View.VISIBLE);
+
+
+        } else {
+            mTaskRecyclerView.setVisibility(View.VISIBLE);
+            empty.setVisibility(View.GONE);
+            mTaskRecyclerView.setLayoutManager(new LinearLayoutManager(HomeActivity.this));
+            mTaskAdapter = new TaskAdapter(allTask, getApplication(), getApplicationContext());
+            mTaskRecyclerView.setAdapter(mTaskAdapter);
+        }
+
     }
 
     @Override
@@ -329,7 +355,6 @@ public class HomeActivity extends BaseActivity
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-
         getMenuInflater().inflate(R.menu.home, menu);
         ascendingMenuItem = menu.findItem(R.id.ascending_list_menu);
         descendingMenuItem = menu.findItem(R.id.descending_list_menu);
@@ -344,23 +369,35 @@ public class HomeActivity extends BaseActivity
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         mTaskRepository = new TaskRepository(getApplication());
-        //noinspection SimplifiableIfStatement
+
+        List<Task> allTasks = null;
+        // didn't get you. by default is ascending and when user select descending then it will give data for descendingwhen user selects
+        //by default its not working
         if (id == R.id.ascending_list_menu) {
+            isAscending = true;
             descendingMenuItem.setChecked(true);
             ascendingMenuItem.setChecked(false);
-            List<Task> allTasks = mTaskRepository.fetchUserOrderByDateInAsc();
-            mTaskAdapter = new TaskAdapter(allTasks, getApplication(), getApplicationContext());
-            mTaskRecyclerView.setAdapter(mTaskAdapter);
-
+            if (mCategoryType.equals(TaskCategory.AllList.toString())) {
+                allTasks = mTaskRepository.fetchUserOrderByDateInAsc();
+            } else if (mCategoryType.equals(TaskCategory.IsFinished.toString())) {
+                allTasks = mTaskRepository.fetchAllFinishedToDosInAsc();
+            } else {
+                allTasks = mTaskRepository.fetchUserOrderByDateInAsc(mCategoryType);
+            }
         } else if (id == R.id.descending_list_menu) {
+            isAscending = false;
             ascendingMenuItem.setChecked(true);
             descendingMenuItem.setChecked(false);
-            List<Task> allTasks = mTaskRepository.fetchUserOrderByDateInDesc();
-            mTaskAdapter = new TaskAdapter(allTasks, getApplication(), getApplicationContext());
-            mTaskRecyclerView.setAdapter(mTaskAdapter);
-
-
+            if (mCategoryType.equals(TaskCategory.AllList.toString())) {
+                allTasks = mTaskRepository.fetchUserOrderByDateInDesc();
+            } else if (mCategoryType.equals(TaskCategory.IsFinished.toString())) {
+                allTasks = mTaskRepository.fetchAllFinishedToDosInDesc();
+            } else {
+                allTasks = mTaskRepository.fetchUserOrderByDateInDesc(mCategoryType);
+            }
         }
+        mTaskAdapter = new TaskAdapter(allTasks, getApplication(), getApplicationContext());
+        mTaskRecyclerView.setAdapter(mTaskAdapter);
 
         return super.onOptionsItemSelected(item);
     }
@@ -372,6 +409,10 @@ public class HomeActivity extends BaseActivity
         int id = item.getItemId();
 
         mTaskRepository = new TaskRepository(getApplication());
+
+
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
+
 
         if (id == R.id.all_list) {
             mCategoryType = TaskCategory.AllList.toString();
@@ -408,15 +449,13 @@ public class HomeActivity extends BaseActivity
             mLoadAsyncTask = new LoadTasksAsyncTask(mCategoryType);
             mLoadAsyncTask.execute();
 
-        } else if (id == R.id.about_us){
+        } else if (id == R.id.about_us) {
             startActivity(new Intent(HomeActivity.this, AboutUs.class));
-
-         }else if (id == R.id.nav_signout) {
+        } else if (id == R.id.nav_signout) {
             mSignOutAsyncTask = new SignOutAsyncTask();
             mSignOutAsyncTask.execute();
         }
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }

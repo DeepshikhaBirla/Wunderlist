@@ -1,7 +1,11 @@
 package com.intimetec.wunderlist.ui;
 
+import android.app.AlarmManager;
 import android.app.DatePickerDialog;
+import android.app.PendingIntent;
 import android.app.TimePickerDialog;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
@@ -15,12 +19,12 @@ import android.widget.Spinner;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.intimetec.wunderlist.R;
 import com.intimetec.wunderlist.data.task.Task;
+import com.intimetec.wunderlist.data.task.TaskAlarm;
 import com.intimetec.wunderlist.data.task.TaskCategory;
 import com.intimetec.wunderlist.data.task.TaskRepository;
 import com.intimetec.wunderlist.data.user.User;
@@ -32,7 +36,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -86,24 +89,40 @@ public class ToDoListActivity extends BaseActivity implements View.OnClickListen
         Bundle data = getIntent().getExtras();
         if (data != null) {
             Task task = (Task) data.getParcelable("task");
+            String categoryType = data.getString("categoryType");
             if (task != null) {
                 txtName.setText(task.getTaskName());
                 txtDate.setText(DateUtil.getDateValue(task.getDateTime()));
-                txtTime.setText(DateUtil.getTimeValue(task.getDateTime()));
-                TaskCategory taskCategory = TaskCategory.valueOf(task.getCategory());
-                categorySpinner.setSelection(taskCategory.getPosition());
+                txtTime.setText(DateUtil.getTime(task.getDateTime()));
+
+                if (categoryType.equalsIgnoreCase(TaskCategory.AllList.toString()) || categoryType.equalsIgnoreCase(TaskCategory.IsFinished.toString())) {
+
+                } else {
+                    TaskCategory taskCategory = TaskCategory.valueOf(task.getCategory());
+                    categorySpinner.setSelection(taskCategory.getPosition());
+                }
 
                 saveBtn.setText("Update");
+            } else if (!TextUtils.isEmpty(categoryType)) {
+                if (categoryType.equalsIgnoreCase(TaskCategory.AllList.toString()) || categoryType.equalsIgnoreCase(TaskCategory.IsFinished.toString())) {
+
+                } else {
+                    TaskCategory taskCategory = TaskCategory.valueOf(categoryType);
+                    categorySpinner.setSelection(taskCategory.getPosition());
+                }
             }
 
         }
     }
 
-
     private List<String> getTaskCategories() {
         List<String> categories = new ArrayList<>();
         for (TaskCategory category : TaskCategory.values()) {
-            categories.add(category.name());
+            if (category.equals(TaskCategory.AllList) || category.equals(TaskCategory.IsFinished)) {
+
+            } else {
+                categories.add(category.name());
+            }
         }
 
         return categories;
@@ -164,11 +183,34 @@ public class ToDoListActivity extends BaseActivity implements View.OnClickListen
                 Task task = (Task) data.getParcelable("task");
                 if (task != null) {
                     attemptUpdate(task);
+                } else {
+                    attemptSave();
                 }
 
             } else if (view == saveBtn) {
                 attemptSave();
             }
+        }
+    }
+
+    private void setAlarm(Calendar calendar, int requestCode) {
+        Intent taskAlarm = new Intent(ToDoListActivity.this, TaskAlarm.class);
+
+        if (calendar.getTimeInMillis() > System.currentTimeMillis()) {
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(ToDoListActivity.this, requestCode, taskAlarm, 0);
+            AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+            alarmManager.set(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
+        }
+    }
+
+    private void cancelAlarm(int requestCode) {
+        Intent taskAlarm = new Intent(ToDoListActivity.this, TaskAlarm.class);
+        boolean taskAlarmIsRunning = (PendingIntent.getBroadcast(ToDoListActivity.this, requestCode, taskAlarm, 0) != null);
+
+        if (taskAlarmIsRunning == true) {
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(ToDoListActivity.this, requestCode, taskAlarm, 0);
+            AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+            alarmManager.cancel(pendingIntent);
         }
     }
 
@@ -210,6 +252,10 @@ public class ToDoListActivity extends BaseActivity implements View.OnClickListen
 
             task = mTaskRepository.fetchTaskByName(taskName);
 
+            final Calendar calendar = Calendar.getInstance();
+            calendar.setTime(date);
+
+            final Task finalTask = task;
             db.collection("users").document(user.getUserEmail())
                     .collection("tasks")
                     .document(String.valueOf(task.getTaskId()))
@@ -218,6 +264,7 @@ public class ToDoListActivity extends BaseActivity implements View.OnClickListen
                         @Override
                         public void onSuccess(Void aVoid) {
                             hideProgressDialog();
+                            setAlarm(calendar, finalTask.getTaskId());
                             Toast.makeText(ToDoListActivity.this, "Task Updated Successfully", Toast.LENGTH_LONG).show();
                             finish();
                         }
@@ -267,6 +314,9 @@ public class ToDoListActivity extends BaseActivity implements View.OnClickListen
 
             task.setCategory(categorySpinner.getSelectedItem().toString());
 
+            final Calendar calendar = Calendar.getInstance();
+            calendar.setTime(date);
+
             db.collection("users").document(user.getUserEmail())
                     .collection("tasks")
                     .document(String.valueOf(task.getTaskId()))
@@ -276,6 +326,13 @@ public class ToDoListActivity extends BaseActivity implements View.OnClickListen
                         public void onSuccess(Void aVoid) {
                             hideProgressDialog();
                             mTaskRepository.update(task);
+
+                            cancelAlarm(task.getTaskId());
+
+                            if (task.getIsFinished() == 0) {
+                                setAlarm(calendar, task.getTaskId());
+                            }
+
                             Toast.makeText(ToDoListActivity.this, "Task Updated Successfully", Toast.LENGTH_LONG).show();
                             finish();
                         }

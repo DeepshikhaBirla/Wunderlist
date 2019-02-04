@@ -76,6 +76,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
 
     public void removeItem(int position) {
         allTasks.remove(position);
+        copyTask.remove(position);
     }
 
     public void filter(String queryText) {
@@ -132,6 +133,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
             } else {
                 Intent intent = new Intent(mContext, ToDoListActivity.class);
                 intent.putExtra("task", task);
+                intent.putExtra("categoryType", task.getCategory());
                 mContext.startActivity(intent);
             }
         }

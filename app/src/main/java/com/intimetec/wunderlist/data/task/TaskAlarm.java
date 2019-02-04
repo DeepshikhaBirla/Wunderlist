@@ -37,13 +37,10 @@ public class TaskAlarm extends BroadcastReceiver {
         for (Task task : allTasks) {
             long diff = task.getDateTime().getTime() - System.currentTimeMillis();
             long diffMinutes = diff / (60 * 1000) % 60;
+            long diffSeconds =  diff / 1000 % 60;
             int diffInDays = (int) ((task.getDateTime().getTime() - System.currentTimeMillis()) / (1000 * 60 * 60 * 24));
 
-            if((diffInDays > 1)||(diffMinutes == 15 || diffMinutes == 14)||( diffMinutes >= 0 && diffMinutes <=2)){
-                showNotification(context, task.getTaskName(), DateUtil.getDateValue(task.getDateTime()));
-
-            }
-
+            showNotification(context, task.getTaskName(), DateUtil.getDateValue(task.getDateTime()));
         }
     }
 
